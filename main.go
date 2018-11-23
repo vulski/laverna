@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 )
 
@@ -35,15 +36,15 @@ func getChapters(url string) []string {
 	return chapters
 }
 
-func downloadChapter(chapterUrl string) {
-	doc := fetchDocument(chapterUrl)
+func downloadChapter(chapter Chapter) {
+	doc := fetchDocument(chapter.Uri)
 
 	// Get Last Page
 	doc.Find("[id=selectPage] > option").Each(func(i int, selection *goquery.Selection) {
 		pageUrl, exists := selection.Attr("value")
 
 		if exists {
-			downloadPage(pageUrl)
+			downloadPage(pageUrl, chapter.ChapterIdx)
 		}
 	})
 	//lastPageString := sel.Text()
@@ -59,7 +60,7 @@ func downloadChapter(chapterUrl string) {
 	//}
 }
 
-func downloadPage(pageUrl string) {
+func downloadPage(pageUrl string, chapterIdx int) {
 	doc := fetchDocument(pageUrl)
 	imgSel := doc.Find(".page-chapter > img").First()
 
@@ -81,7 +82,16 @@ func downloadPage(pageUrl string) {
 			log.Fatalln(readerr)
 		}
 
-		f, openerr := os.OpenFile("/tmp/chapter-downloads/" + idx + ".jpg", os.O_RDONLY|os.O_CREATE|os.O_WRONLY, 0777)
+		chapterIdxString := strconv.Itoa(chapterIdx)
+
+		mkerr := os.MkdirAll("/tmp/chapter-downloads/"+chapterIdxString, 0777)
+
+		if mkerr != nil {
+			log.Println("Failed making download directory")
+			return
+		}
+
+		f, openerr := os.OpenFile("/tmp/chapter-downloads/" + chapterIdxString + "/" + idx + ".jpg", os.O_RDONLY|os.O_CREATE|os.O_WRONLY, 0777)
 
 		defer f.Close()
 
@@ -100,17 +110,18 @@ func downloadPage(pageUrl string) {
 
 }
 
-type ChapterUrl struct {
+type Chapter struct {
 	Uri string
+	ChapterIdx int
 }
 
-var chapterUrls = make(chan ChapterUrl, 0)
+var chapterUrls = make(chan Chapter, 0)
 
 func chapterWorker() {
 	for {
 		select {
-		case url := <- chapterUrls:
-			downloadChapter(url.Uri)
+		case chapter := <- chapterUrls:
+			downloadChapter(chapter)
 			wg.Done()
 		}
 	}
@@ -148,12 +159,12 @@ func main() {
 	_ = os.MkdirAll("/tmp/chapter-downloads", 0777)
 	chapters := getChapters("http://xoxocomics.com/comic/miles-morales-ultimate-spider-man")
 
-	for _, chapter := range chapters[0:1] {
+	for idx, chapter := range chapters {
 		wg.Add(1)
-		chapterUrls <- ChapterUrl{
+		chapterUrls <- Chapter{
 			Uri : chapter,
+			ChapterIdx : idx + 1,
 		}
-		break
 	}
 
 	wg.Wait()
