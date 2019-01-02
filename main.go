@@ -1,14 +1,23 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
 )
+
+var downloadDir = "./downloads/"
+var chapterWorkers = 10
+var imageWorkers = 5
+var totalPages = 0
 
 func fetchDocument(url string) *goquery.Document {
 	r, err := http.Get(url)
@@ -37,37 +46,46 @@ func getChapters(url string) []string {
 }
 
 func downloadChapter(chapter Chapter) {
+
+	log.Println("Preparing chapter ", chapter.ChapterIdx, " for downloading...")
+-
 	doc := fetchDocument(chapter.Uri)
 
 	// Get Last Page
 	doc.Find("[id=selectPage] > option").Each(func(i int, selection *goquery.Selection) {
 		pageUrl, exists := selection.Attr("value")
+		pageIdx := selection.Text()
 
 		if exists {
-			downloadPage(pageUrl, chapter.ChapterIdx)
+
+			totalPages++
+			wg.Add(1)
+			imageDownloadChannel <- imageDownloader{
+				pageUrl: pageUrl,
+				chapter: chapter,
+				pageIdx: pageIdx,
+			}
 		}
 	})
-	//lastPageString := sel.Text()
-	//
-	//lastPage, converr := strconv.Atoi(lastPageString)
-	//if converr != nil {
-	//	log.Fatalln(converr)
-	//}
-	//
-	//for i := 1; i <= lastPage; i++ {
-	//	pageUrl := chapterUrl + "/" + strconv.Itoa(i)
-	//	downloadPage(pageUrl)
-	//}
 }
 
-func downloadPage(pageUrl string, chapterIdx int) {
+func downloadPage(pageUrl string, idx string, chapter Chapter) {
+	chapterIdxString := strconv.Itoa(chapter.ChapterIdx)
+	chapterDownloadDirectory := downloadDir + chapter.Name + "/" + chapterIdxString + "/"
+	filePath := chapterDownloadDirectory + idx + ".jpg"
+
+	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+		//log.Println("File already exists : ", filePath)
+		return
+	}
+
 	doc := fetchDocument(pageUrl)
 	imgSel := doc.Find(".page-chapter > img").First()
 
 	imgUrl, exists := imgSel.Attr("src")
-	idx, _ := imgSel.Attr("data-index")
-
 	if exists {
+		log.Println("Loading Page")
+
 		r, err := http.Get(imgUrl)
 
 		if err != nil {
@@ -82,16 +100,14 @@ func downloadPage(pageUrl string, chapterIdx int) {
 			log.Fatalln(readerr)
 		}
 
-		chapterIdxString := strconv.Itoa(chapterIdx)
-
-		mkerr := os.MkdirAll("/tmp/chapter-downloads/"+chapterIdxString, 0777)
+		mkerr := os.MkdirAll(chapterDownloadDirectory, 0777)
 
 		if mkerr != nil {
 			log.Println("Failed making download directory")
 			return
 		}
 
-		f, openerr := os.OpenFile("/tmp/chapter-downloads/" + chapterIdxString + "/" + idx + ".jpg", os.O_RDONLY|os.O_CREATE|os.O_WRONLY, 0777)
+		f, openerr := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE|os.O_WRONLY, 0777)
 
 		defer f.Close()
 
@@ -105,22 +121,40 @@ func downloadPage(pageUrl string, chapterIdx int) {
 			log.Fatalln(writeerr)
 		}
 
-		log.Println("Downloaded : ", imgUrl)
+		time.Sleep(1 * time.Second)
 	}
 
 }
 
 type Chapter struct {
-	Uri string
+	Uri        string
 	ChapterIdx int
+	Name       string
+}
+
+type imageDownloader struct {
+	pageUrl string
+	pageIdx string
+	chapter Chapter
 }
 
 var chapterUrls = make(chan Chapter, 0)
+var imageDownloadChannel = make(chan imageDownloader, 10000)
+
+func imageWorker() {
+	for {
+		select {
+		case download := <-imageDownloadChannel:
+			downloadPage(download.pageUrl, download.pageIdx, download.chapter)
+			wg.Done()
+		}
+	}
+}
 
 func chapterWorker() {
 	for {
 		select {
-		case chapter := <- chapterUrls:
+		case chapter := <-chapterUrls:
 			downloadChapter(chapter)
 			wg.Done()
 		}
@@ -130,42 +164,54 @@ func chapterWorker() {
 var wg = sync.WaitGroup{}
 
 func main() {
-	//r, err := http.Get("http://xoxocomics.com/comic/miles-morales-ultimate-spider-man/issue-1/9821/1")
-	//
-	//if err != nil {
-	//	log.Fatalln(err)
-	//}
-	//
-	//defer r.Body.Close()
-	//
-	//doc, docErr := goquery.NewDocumentFromReader(r.Body)
-	//
-	//if docErr != nil {
-	//	log.Fatalln(docErr)
-	//}
 
-	//doc.Find("img[data-original]").Each(func(i int, selection *goquery.Selection) {
-	//	src, _ := selection.Attr("src")
-	//
-	//
-	//	log.Println(src)
-	//
-	//})
-
-	for i := 0; i < 5; i++ {
+	for i := 0; i < chapterWorkers; i++ {
 		go chapterWorker()
 	}
 
-	_ = os.MkdirAll("/tmp/chapter-downloads", 0777)
-	chapters := getChapters("http://xoxocomics.com/comic/miles-morales-ultimate-spider-man")
+	for i := 0; i < imageWorkers; i++ {
+		go imageWorker()
+	}
+
+	_ = os.MkdirAll(downloadDir, 0777)
+
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("Enter Comic Url: ")
+	comicUrl := ""
+	scanner.Scan()
+	comicUrl = scanner.Text()
+
+	if scanner.Err() != nil {
+		log.Println(scanner.Err())
+	}
+
+	comicUrl = strings.Trim(comicUrl, " ")
+	log.Println(comicUrl)
+	chapters := getChapters(comicUrl)
+
+	nameParts := strings.Split(comicUrl, "/")
+	namePartsLength := len(nameParts)
+	name := nameParts[namePartsLength-1]
 
 	for idx, chapter := range chapters {
 		wg.Add(1)
 		chapterUrls <- Chapter{
-			Uri : chapter,
-			ChapterIdx : idx + 1,
+			Uri:        chapter,
+			ChapterIdx: idx + 1,
+			Name:       name,
 		}
 	}
+
+	if len(chapters) == 0 {
+		log.Println("No chapters found - Possibly invalid url")
+	}
+
+	//wg.Wait()
+	//wg.Add(totalPages)
+
+	//for i := 0; i < imageWorkers; i++ {
+	//	go imageWorker()
+	//}
 
 	wg.Wait()
 
