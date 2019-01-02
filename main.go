@@ -48,7 +48,7 @@ func getChapters(url string) []string {
 func downloadChapter(chapter Chapter) {
 
 	log.Println("Preparing chapter ", chapter.ChapterIdx, " for downloading...")
--
+
 	doc := fetchDocument(chapter.Uri)
 
 	// Get Last Page
