@@ -69,8 +69,8 @@ func imageWorker() {
 					Uri:img,
 					FilePath:downloadPath,
 				})
-				imageWaitGroup.Done()
 			}
+			imageWaitGroup.Done()
 		}
 	}
 }

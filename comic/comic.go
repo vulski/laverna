@@ -40,7 +40,13 @@ func Download(url string) {
 		return
 	}
 
+	log.Println("Here3")
+
+
 	chaptersRes := GetChapters(url)
+
+	log.Println("Here2")
+
 
 	for idx, chapter := range chaptersRes {
 		name := getComicName(url)
@@ -49,7 +55,10 @@ func Download(url string) {
 			ChapterIdx: idx + 1,
 			ComicName:       name,
 		}
+		chapterWaitGroup.Add(1)
 	}
+
+	log.Println("Here")
 
 	if len(chapters) == 0 {
 		log.Println("No chapters found - Possibly invalid url")

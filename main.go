@@ -17,7 +17,7 @@ func main() {
 	defer comic.Wait()
 
 	//comic.InitUi()
-	
+
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Enter Comic Url: ")
 	comicUrl := ""
