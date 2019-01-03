@@ -2,176 +2,141 @@ package main
 
 import (
 	"bufio"
+	_ "bufio"
+	"comicArchiver/comic"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"io/ioutil"
+	_ "fmt"
+	"github.com/jroimartin/gocui"
 	"log"
-	"net/http"
 	"os"
-	"strconv"
 	"strings"
-	"sync"
-	"time"
+	_ "strings"
 )
 
 var downloadDir = "./downloads/"
-var chapterWorkers = 10
-var imageWorkers = 5
-var totalPages = 0
 
-func fetchDocument(url string) *goquery.Document {
-	r, err := http.Get(url)
+var Editor gocui.Editor
 
-	if err != nil {
-		log.Fatalln(err)
-	}
+var msg string
+var msgView *gocui.View
 
-	doc, docerr := goquery.NewDocumentFromReader(r.Body)
-
-	if docerr != nil {
-		log.Fatalln(docerr)
-	}
-	return doc
-}
-
-func getChapters(url string) []string {
-	doc := fetchDocument(url)
-
-	chapters := make([]string, 0)
-	doc.Find("div.chapter > a").Each(func(i int, selection *goquery.Selection) {
-		chapters = append(chapters, selection.AttrOr("href", "http://example.com"))
-	})
-
-	return chapters
-}
-
-func downloadChapter(chapter Chapter) {
-
-	log.Println("Preparing chapter ", chapter.ChapterIdx, " for downloading...")
-
-	doc := fetchDocument(chapter.Uri)
-
-	// Get Last Page
-	doc.Find("[id=selectPage] > option").Each(func(i int, selection *goquery.Selection) {
-		pageUrl, exists := selection.Attr("value")
-		pageIdx := selection.Text()
-
-		if exists {
-
-			totalPages++
-			wg.Add(1)
-			imageDownloadChannel <- imageDownloader{
-				pageUrl: pageUrl,
-				chapter: chapter,
-				pageIdx: pageIdx,
-			}
+func layout(g *gocui.Gui) error {
+	maxX, maxY := g.Size()
+	if v, err := g.SetView("input", 0, maxY - 2, maxX, maxY); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
 		}
-	})
-}
 
-func downloadPage(pageUrl string, idx string, chapter Chapter) {
-	chapterIdxString := strconv.Itoa(chapter.ChapterIdx)
-	chapterDownloadDirectory := downloadDir + chapter.Name + "/" + chapterIdxString + "/"
-	filePath := chapterDownloadDirectory + idx + ".jpg"
+		_, err := g.SetCurrentView("input")
 
-	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		//log.Println("File already exists : ", filePath)
-		return
+		if err != nil {
+			return err
+		}
+
+		//logger.Logger.Println(" CHANGE:", "input", x, y, maxX, maxY)
+
+		v.Editor = gocui.EditorFunc(simpleEditor)
+
+		v.FgColor = gocui.Attribute(15 + 1)
+		// v.BgColor = gocui.Attribute(0)
+		v.BgColor = gocui.ColorDefault
+
+		v.Autoscroll = false
+		v.Editable = true
+		v.Wrap = false
+		v.Frame = false
+
 	}
 
-	doc := fetchDocument(pageUrl)
-	imgSel := doc.Find(".page-chapter > img").First()
+	if msgView, err := g.SetView("hello", maxX/2-7, maxY/2, maxX/2+7, maxY/2+2); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		fmt.Fprintln(msgView, msg)
+	}
+	//return nil
 
-	imgUrl, exists := imgSel.Attr("src")
-	if exists {
-		log.Println("Loading Page")
+	return nil
+}
 
-		r, err := http.Get(imgUrl)
+func quit(g *gocui.Gui, v *gocui.View) error {
+	return gocui.ErrQuit
+}
+
+func simpleEditor(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	switch {
+
+	case key == gocui.KeyEnter:
+		msg = v.Buffer()
+
+		//log.Println(msg)
+
+		mainView, _ := g.View("hello")
+
+		_, err := fmt.Fprintln(mainView, msg)
 
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		defer r.Body.Close()
-
-		bytes, readerr := ioutil.ReadAll(r.Body)
-
-		if readerr != nil {
-			log.Fatalln(readerr)
+		if len(msg) <= 0 {
+			// return errors.New("input line empty")
+			v.Clear()
+			v.SetCursor(0, 0)
 		}
 
-		mkerr := os.MkdirAll(chapterDownloadDirectory, 0777)
+	case ch != 0 && mod == 0:
+		v.EditWrite(ch)
+	case key == gocui.KeySpace:
+		v.EditWrite(' ')
+	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
+		v.EditDelete(true)
+	case key == gocui.KeyDelete:
+		v.EditDelete(false)
+	case key == gocui.KeyInsert:
+		v.Overwrite = !v.Overwrite
+	//case key == gocui.KeyEnter:
 
-		if mkerr != nil {
-			log.Println("Failed making download directory")
-			return
-		}
 
-		f, openerr := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE|os.O_WRONLY, 0777)
+	case key == gocui.KeyArrowDown:
 
-		defer f.Close()
+	case key == gocui.KeyArrowUp:
 
-		if openerr != nil {
-			log.Fatalln(openerr)
-		}
+	case key == gocui.KeyArrowLeft:
 
-		_, writeerr := f.Write(bytes)
+	case key == gocui.KeyArrowRight:
 
-		if writeerr != nil {
-			log.Fatalln(writeerr)
-		}
 
-		time.Sleep(1 * time.Second)
-	}
-
-}
-
-type Chapter struct {
-	Uri        string
-	ChapterIdx int
-	Name       string
-}
-
-type imageDownloader struct {
-	pageUrl string
-	pageIdx string
-	chapter Chapter
-}
-
-var chapterUrls = make(chan Chapter, 0)
-var imageDownloadChannel = make(chan imageDownloader, 10000)
-
-func imageWorker() {
-	for {
-		select {
-		case download := <-imageDownloadChannel:
-			downloadPage(download.pageUrl, download.pageIdx, download.chapter)
-			wg.Done()
-		}
 	}
 }
 
-func chapterWorker() {
-	for {
-		select {
-		case chapter := <-chapterUrls:
-			downloadChapter(chapter)
-			wg.Done()
-		}
-	}
-}
-
-var wg = sync.WaitGroup{}
+var g *gocui.Gui
 
 func main() {
 
-	for i := 0; i < chapterWorkers; i++ {
-		go chapterWorker()
-	}
+	comic.Init()
+	defer comic.Wait()
 
-	for i := 0; i < imageWorkers; i++ {
-		go imageWorker()
-	}
+	//g, err := gocui.NewGui(gocui.OutputNormal)
+	//if err != nil {
+	//	log.Panicln(err)
+	//}
+	//defer g.Close()
+	//
+	//g.SetManagerFunc(layout)
+	//
+	//if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+	//	log.Panicln(err)
+	//}
+	//
+	////msg = "Not Hello World"
+	//
+	//if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	//	log.Panicln(err)
+	//}
+
+
+
 
 	_ = os.MkdirAll(downloadDir, 0777)
 
@@ -186,33 +151,5 @@ func main() {
 	}
 
 	comicUrl = strings.Trim(comicUrl, " ")
-	log.Println(comicUrl)
-	chapters := getChapters(comicUrl)
-
-	nameParts := strings.Split(comicUrl, "/")
-	namePartsLength := len(nameParts)
-	name := nameParts[namePartsLength-1]
-
-	for idx, chapter := range chapters {
-		wg.Add(1)
-		chapterUrls <- Chapter{
-			Uri:        chapter,
-			ChapterIdx: idx + 1,
-			Name:       name,
-		}
-	}
-
-	if len(chapters) == 0 {
-		log.Println("No chapters found - Possibly invalid url")
-	}
-
-	//wg.Wait()
-	//wg.Add(totalPages)
-
-	//for i := 0; i < imageWorkers; i++ {
-	//	go imageWorker()
-	//}
-
-	wg.Wait()
-
+	comic.Download(comicUrl)
 }
