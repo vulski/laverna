@@ -3,6 +3,7 @@ package comic
 import (
 	"comicArchiver/thek"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -32,6 +33,13 @@ func getComicName(url string) string {
 }
 
 func Download(url string) {
+	err := os.MkdirAll(DownloadDirectory, 0777)
+
+	if err != nil {
+		log.Println("Could not make downloads directory")
+		return
+	}
+
 	chaptersRes := GetChapters(url)
 
 	for idx, chapter := range chaptersRes {
