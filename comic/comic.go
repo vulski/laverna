@@ -1,7 +1,7 @@
 package comic
 
 import (
-	"comicArchiver/thek"
+	"laverna/thek"
 	"log"
 	"os"
 	"strconv"
@@ -42,7 +42,6 @@ func Download(url string) {
 		return
 	}
 
-
 	CE.UpdateResults("Start Getting to it")
 
 	chaptersRes := GetChapters(url)
@@ -53,7 +52,7 @@ func Download(url string) {
 		chapters <- Chapter{
 			Uri:        chapter,
 			ChapterIdx: idx + 1,
-			ComicName:       name,
+			ComicName:  name,
 		}
 		chapterWaitGroup.Add(1)
 	}

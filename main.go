@@ -2,8 +2,8 @@ package main
 
 import (
 	_ "bufio"
-	"comicArchiver/comic"
 	_ "fmt"
+	"laverna/comic"
 )
 
 func main() {

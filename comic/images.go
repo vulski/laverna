@@ -1,15 +1,17 @@
 package comic
 
 import (
-	"comicArchiver/thek"
-	"github.com/pkg/errors"
+	"laverna/thek"
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 var images = make(chan Image, 0)
 var imageWaitGroup = sync.WaitGroup{}
+
 const DownloadDirectory = "./downloads/"
 
 var TotalImages = 0
@@ -36,7 +38,6 @@ func getImage(pageUrl string) (string, bool) {
 	imgSel := doc.Find(".page-chapter > img").First()
 
 	imgUrl, exists := imgSel.Attr("src")
-
 
 	return imgUrl, exists
 }
@@ -69,13 +70,13 @@ func imageWorker(id int) {
 					di := strconv.Itoa(DownloadedImages)
 					ti := strconv.Itoa(TotalImages)
 
-					CE.UpdateResults(di + " / " + ti +" downloaded images - " + idstring)
+					CE.UpdateResults(di + " / " + ti + " downloaded images - " + idstring)
 
 				} else {
 					//CE.UpdateResults("Downloading Page...")
 					thek.DownloadPage(thek.Page{
-						Uri:img,
-						FilePath:downloadPath,
+						Uri:      img,
+						FilePath: downloadPath,
 					})
 
 					DownloadedImages++
@@ -83,7 +84,7 @@ func imageWorker(id int) {
 					di := strconv.Itoa(DownloadedImages)
 					ti := strconv.Itoa(TotalImages)
 
-					CE.UpdateResults(di + " / " + ti +" downloaded images - " + idstring)
+					CE.UpdateResults(di + " / " + ti + " downloaded images - " + idstring)
 				}
 			}
 			imageWaitGroup.Done()

@@ -1,9 +1,10 @@
 package comic
 
 import (
-	"comicArchiver/thek"
-	"github.com/PuerkitoBio/goquery"
+	"laverna/thek"
 	"sync"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 // Globals
@@ -13,7 +14,7 @@ var chapterWaitGroup = sync.WaitGroup{}
 type Chapter struct {
 	Uri        string
 	ChapterIdx int
-	ComicName       string
+	ComicName  string
 }
 
 func ChapterInit() {
