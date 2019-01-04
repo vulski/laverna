@@ -25,3 +25,13 @@ cd laverna/
 go build -o ~/go/bin/laverna main.go
 ~/go/bin/laverna
 ```
+
+## Usage
+When prompted
+```
+// Commands
+get [url]
+
+// Example
+get http://xoxocomics.com/comic/miles-morales-ultimate-spider-man
+```
