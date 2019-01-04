@@ -55,7 +55,7 @@ func DownloadChapter(chapter Chapter) {
 	CE.UpdateResults("Fetching Chapter Page")
 	doc := thek.FetchDocument(chapter.Uri)
 
-	CE.UpdateResults("Push found images to queue")
+	//CE.UpdateResults("Push found images to queue")
 	doc.Find("[id=selectPage] > option").Each(func(i int, selection *goquery.Selection) {
 		pageUrl, exists := selection.Attr("value")
 		pageIdx := selection.Text()

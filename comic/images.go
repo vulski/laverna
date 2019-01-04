@@ -23,7 +23,7 @@ type Image struct {
 
 func ImagesInit() {
 	for i := 0; i < WorkerCount; i++ {
-		go imageWorker()
+		go imageWorker(i)
 	}
 }
 
@@ -53,7 +53,8 @@ func getDownloadPath(image Image) (string, error) {
 	return filePath, nil
 }
 
-func imageWorker() {
+func imageWorker(id int) {
+	idstring := strconv.Itoa(id)
 	for {
 		select {
 		case image := <-images:
@@ -64,21 +65,26 @@ func imageWorker() {
 				downloadPath, err := getDownloadPath(image)
 
 				if err != nil {
-					return
+					DownloadedImages++
+					di := strconv.Itoa(DownloadedImages)
+					ti := strconv.Itoa(TotalImages)
+
+					CE.UpdateResults(di + " / " + ti +" downloaded images - " + idstring)
+
+				} else {
+					//CE.UpdateResults("Downloading Page...")
+					thek.DownloadPage(thek.Page{
+						Uri:img,
+						FilePath:downloadPath,
+					})
+
+					DownloadedImages++
+
+					di := strconv.Itoa(DownloadedImages)
+					ti := strconv.Itoa(TotalImages)
+
+					CE.UpdateResults(di + " / " + ti +" downloaded images - " + idstring)
 				}
-
-				//CE.UpdateResults("Downloading Page...")
-				thek.DownloadPage(thek.Page{
-					Uri:img,
-					FilePath:downloadPath,
-				})
-
-				DownloadedImages++
-
-				di := strconv.Itoa(DownloadedImages)
-				ti := strconv.Itoa(TotalImages)
-
-				CE.UpdateResults(di + " / " + ti +" downloaded images")
 			}
 			imageWaitGroup.Done()
 		}
