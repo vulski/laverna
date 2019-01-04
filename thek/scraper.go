@@ -38,7 +38,7 @@ func Wait() {
 // Public API
 
 func DownloadPage(page Page) {
-	log.Println("Downloading Page")
+	//log.Println("Downloading Page")
 	pageWaitGroup.Add(1)
 	pages <- page
 }
@@ -62,11 +62,11 @@ func FetchDocument(url string) *goquery.Document {
 
 func savePage(page Page) error {
 
-	log.Println("Loading Page")
+	//log.Println("Loading Page")
 
 	r, err := http.Get(page.Uri)
 
-	log.Println("Page Loaded")
+	//log.Println("Page Loaded")
 
 	if err != nil {
 		log.Fatalln(err)
@@ -74,7 +74,7 @@ func savePage(page Page) error {
 
 	defer r.Body.Close()
 
-	log.Println("Reading into memory")
+	//log.Println("Reading into memory")
 	bytes, readerr := ioutil.ReadAll(r.Body)
 
 	if readerr != nil {
@@ -84,14 +84,14 @@ func savePage(page Page) error {
 	dirParts := strings.Split(page.FilePath, "/")
 	dir := strings.Join(dirParts[0:len(dirParts) - 1], "/")
 
-	log.Println("Make download directory", dir)
+	//log.Println("Make download directory", dir)
 	mkerr := os.MkdirAll(dir, 0777)
 
 	if mkerr != nil {
 		return errors.New("Failed making download directory")
 	}
 
-	log.Println("Save file to disk")
+	//log.Println("Save file to disk")
 	f, openerr := os.OpenFile(page.FilePath, os.O_RDONLY|os.O_CREATE|os.O_WRONLY, 0775)
 
 	defer f.Close()
@@ -106,7 +106,7 @@ func savePage(page Page) error {
 		log.Fatalln(writeerr)
 	}
 
-	log.Println("Saved - now pausing")
+	//log.Println("Saved - now pausing")
 	time.Sleep(time.Duration(SleepTime * time.Millisecond))
 
 	return nil

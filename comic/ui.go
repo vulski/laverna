@@ -2,118 +2,23 @@ package comic
 
 import (
 	"fmt"
-	"github.com/jroimartin/gocui"
 	"log"
 	"strings"
+	"sync"
+	"time"
+
+	"github.com/jroimartin/gocui"
 )
 
-func Quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.ErrQuit
-}
+const NumGoroutines = 10
 
-var g *gocui.Gui
+var (
+	done = make(chan struct{})
+	wg   sync.WaitGroup
 
-type Label struct {
-	name string
-	x, y int
-	w, h int
-	body string
-}
-
-func NewLabel(name string, x, y int, body string) *Label {
-	lines := strings.Split(body, "\n")
-
-	w := 0
-	for _, l := range lines {
-		if len(l) > w {
-			w = len(l)
-		}
-	}
-	h := len(lines) + 1
-	w = w + 1
-
-	return &Label{name: name, x: x, y: y, w: w, h: h, body: body}
-}
-
-func (l *Label) Layout(g *gocui.Gui) error {
-	v, err := g.SetView(l.name, l.x, l.y, l.x+l.w, l.y+l.h)
-	if err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Frame = false
-		fmt.Fprint(v, l.body)
-	}
-	return nil
-}
-
-type Input struct {
-	name      string
-	x, y      int
-	w         int
-	maxLength int
-}
-
-func NewInput(name string, x, y, w, maxLength int) *Input {
-	return &Input{name: name, x: x, y: y, w: w, maxLength: maxLength}
-}
-
-func (i *Input) Layout(g *gocui.Gui) error {
-	v, err := g.SetView(i.name, i.x, i.y, i.x+i.w, i.y+2)
-	if err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Editor = i
-		v.Editable = true
-	}
-	return nil
-}
-
-func (i *Input) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
-	cx, _ := v.Cursor()
-	ox, _ := v.Origin()
-	limit := ox+cx+1 > i.maxLength
-	switch {
-	case ch != 0 && mod == 0 && !limit:
-		v.EditWrite(ch)
-	case key == gocui.KeySpace && !limit:
-		v.EditWrite(' ')
-	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
-		v.EditDelete(true)
-	case key == gocui.KeyEnter:
-		input := v.Buffer()
-
-		commandParts := strings.Split(input, " ")
-
-		fmt.Println(commandParts, len(commandParts))
-
-		if len(commandParts) >= 2 {
-
-			command := commandParts[0]
-
-			log.Println(command)
-
-			switch command {
-				case "get":
-					//NewLabel("hello", 9, 6, "Hello World")
-					//g.Update(SetFocus("hello"))
-					Download(commandParts[1])
-			}
-
-		}
-
-		v.Clear()
-		_ = v.SetCursor(0, 0)
-	}
-}
-
-func SetFocus(name string) func(g *gocui.Gui) error {
-	return func(g *gocui.Gui) error {
-		_, err := g.SetCurrentView(name)
-		return err
-	}
-}
+	mu  sync.Mutex // protects ctr
+	ctr = 0
+)
 
 func InitUi() {
 	g, err := gocui.NewGui(gocui.OutputNormal)
@@ -122,20 +27,141 @@ func InitUi() {
 	}
 	defer g.Close()
 
-	g.Cursor = true
+	g.SetManagerFunc(layout)
 
-	_, height := g.Size()
-
-	label := NewLabel("label", 1, height - 3, "Command")
-	input := NewInput("input", 9, height - 3, 100, 1000)
-	focus := gocui.ManagerFunc(SetFocus("input"))
-	g.SetManager(label, input, focus)
-
-	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, Quit); err != nil {
+	if err := keybindings(g); err != nil {
 		log.Panicln(err)
 	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
+	}
+
+}
+
+type CommandEditor struct {
+	Insert bool
+	g *gocui.Gui
+}
+
+func (ce *CommandEditor) UpdateResults(msg string) {
+	ce.g.Update(func(g *gocui.Gui) error {
+		v, err := g.View("ctr")
+		if err != nil {
+			return err
+		}
+		v.Clear()
+		fmt.Fprintln(v, msg)
+		return nil
+	})
+}
+
+func (ce *CommandEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	cx, _ := v.Cursor()
+	ox, _ := v.Origin()
+	limit := ox+cx+1 > 50000
+
+	switch {
+
+	case key == gocui.KeyEnter:
+		input := v.Buffer()
+
+		commandParts := strings.Split(input, " ")
+
+		//fmt.Println(commandParts, len(commandParts))
+
+		if len(commandParts) >= 2 {
+			command := commandParts[0]
+
+			//log.Println(command)
+
+			switch command {
+			case "get":
+				//NewLabel("hello", 9, 6, "Hello World")
+				//g.Update(SetFocus("hello"))
+				url := strings.TrimSpace(commandParts[1])
+				go Download(url)
+				ce.UpdateResults("|" + url + "|")
+			}
+
+		}
+
+		v.Clear()
+		_ = v.SetCursor(0, 0)
+		break
+
+	case ch != 0 && mod == 0 && !limit:
+		v.EditWrite(ch)
+	case key == gocui.KeySpace:
+		v.EditWrite(' ')
+	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
+		v.EditDelete(true)
+
+	}
+}
+
+var CE = &CommandEditor{}
+
+func layout(g *gocui.Gui) error {
+	maxX, maxY := g.Size()
+	if v, err := g.SetView("ctr", 2, 2, maxX - 5, 10); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		fmt.Fprintln(v, "Hello World")
+	}
+
+	if v, err := g.SetView("input", 0, maxY - 3, maxX - 5, maxY - 1); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+
+		v.Editable = true
+		CE.g = g
+		v.Editor = CE
+
+		//fmt.Fprintln(v, "Hello ")
+	}
+
+	g.SetCurrentView("input")
+
+	return nil
+}
+
+func keybindings(g *gocui.Gui) error {
+	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+		return err
+	}
+	return nil
+}
+
+func quit(g *gocui.Gui, v *gocui.View) error {
+	close(done)
+	return gocui.ErrQuit
+}
+
+func counter(g *gocui.Gui) {
+	defer wg.Done()
+
+	for {
+		select {
+		case <-done:
+			return
+		case <-time.After(500 * time.Millisecond):
+			mu.Lock()
+			n := ctr
+			ctr++
+			mu.Unlock()
+
+			g.Update(func(g *gocui.Gui) error {
+				v, err := g.View("ctr")
+				if err != nil {
+					return err
+				}
+				v.Clear()
+				fmt.Fprintln(v, n)
+				return nil
+			})
+		}
 	}
 }

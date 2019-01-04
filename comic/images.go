@@ -12,6 +12,8 @@ var images = make(chan Image, 0)
 var imageWaitGroup = sync.WaitGroup{}
 const DownloadDirectory = "./downloads/"
 
+var TotalImages = 0
+var DownloadedImages = 0
 
 type Image struct {
 	pageUrl string
@@ -65,10 +67,18 @@ func imageWorker() {
 					return
 				}
 
+				//CE.UpdateResults("Downloading Page...")
 				thek.DownloadPage(thek.Page{
 					Uri:img,
 					FilePath:downloadPath,
 				})
+
+				DownloadedImages++
+
+				di := strconv.Itoa(DownloadedImages)
+				ti := strconv.Itoa(TotalImages)
+
+				CE.UpdateResults(di + " / " + ti +" downloaded images")
 			}
 			imageWaitGroup.Done()
 		}

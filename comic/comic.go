@@ -4,6 +4,7 @@ import (
 	"comicArchiver/thek"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -33,21 +34,20 @@ func getComicName(url string) string {
 }
 
 func Download(url string) {
+	url = strings.Trim(url, " ")
 	err := os.MkdirAll(DownloadDirectory, 0777)
 
 	if err != nil {
-		log.Println("Could not make downloads directory")
+		//log.Println("Could not make downloads directory")
 		return
 	}
 
-	log.Println("Here3")
 
+	CE.UpdateResults("Start Getting to it")
 
 	chaptersRes := GetChapters(url)
 
-	log.Println("Here2")
-
-
+	CE.UpdateResults("Pushing chapters to channel")
 	for idx, chapter := range chaptersRes {
 		name := getComicName(url)
 		chapters <- Chapter{
@@ -58,9 +58,14 @@ func Download(url string) {
 		chapterWaitGroup.Add(1)
 	}
 
-	log.Println("Here")
+	//log.Println("Here")
 
-	if len(chapters) == 0 {
-		log.Println("No chapters found - Possibly invalid url")
+	chapterCount := strconv.Itoa(len(chaptersRes))
+	CE.UpdateResults("Downloading " + chapterCount + " chapters")
+
+	if chapterCount == "0" {
+		log.Println("No chapters found - Possibly invalid url", url)
+		//CE.UpdateResults("Oh no! " + url)
+
 	}
 }
