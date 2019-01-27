@@ -3,6 +3,7 @@ package comic
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -44,6 +45,10 @@ type CommandEditor struct {
 	g *gocui.Gui
 }
 
+func AddMessage(msg string) {
+	ComicStats.Messages = append(ComicStats.Messages, msg)
+}
+
 func (ce *CommandEditor) UpdateResults(msg string) {
 	ce.g.Update(func(g *gocui.Gui) error {
 		v, err := g.View("ctr")
@@ -51,7 +56,24 @@ func (ce *CommandEditor) UpdateResults(msg string) {
 			return err
 		}
 		v.Clear()
-		fmt.Fprintln(v, msg)
+
+		AddMessage(msg)
+
+		fmt.Fprintln(v, "Pages: " + strconv.Itoa(ComicStats.DownloadedPages) + "/" + strconv.Itoa(ComicStats.TotalPages))
+		fmt.Fprintln(v, "Total Chapters: " + strconv.Itoa(ComicStats.TotalChapters))
+
+		fmt.Fprintln(v,"----------------------------------------")
+
+		// Build Message from Stats
+		if len(ComicStats.Messages) > 5 {
+			for _, msg := range ComicStats.Messages[len(ComicStats.Messages)-6 : len(ComicStats.Messages)] {
+				fmt.Fprintln(v, msg)
+			}
+		} else {
+			for _, msg := range ComicStats.Messages {
+				fmt.Fprintln(v, msg)
+			}
+		}
 		return nil
 	})
 }
@@ -108,7 +130,7 @@ func layout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		fmt.Fprintln(v, "Hello World")
+		fmt.Fprintln(v, "Command: get [url]")
 	}
 
 	if v, err := g.SetView("input", 0, maxY - 3, maxX - 5, maxY - 1); err != nil {

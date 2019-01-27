@@ -11,6 +11,16 @@ import (
 // Globals
 const WorkerCount = 5
 
+type Stats struct {
+	RunningWorkers string
+	Messages []string
+	DownloadedPages int
+	TotalPages int
+	TotalChapters int
+}
+
+var ComicStats Stats
+
 func Init() {
 	thek.Init()
 
@@ -33,6 +43,10 @@ func getComicName(url string) string {
 	return name
 }
 
+func GetPagination(url string) {
+
+}
+
 func Download(url string) {
 	url = strings.Trim(url, " ")
 	err := os.MkdirAll(DownloadDirectory, 0777)
@@ -44,10 +58,22 @@ func Download(url string) {
 
 	CE.UpdateResults("Start Getting to it")
 
-	chaptersRes := GetChapters(url)
+	chaptersRes := make([]string, 0)
+	finalChapters := make([]string, 0)
+	run := true
+	counter := 1
+	for run {
+		chaptersRes = GetChapters(url + "?page=" + strconv.Itoa(counter))
+		run = len(chaptersRes) > 0
+		counter++
+
+		if run {
+			finalChapters = append(chaptersRes, finalChapters...)
+		}
+	}
 
 	CE.UpdateResults("Pushing chapters to channel")
-	for idx, chapter := range chaptersRes {
+	for idx, chapter := range finalChapters {
 		name := getComicName(url)
 		chapters <- Chapter{
 			Uri:        chapter,
@@ -59,7 +85,7 @@ func Download(url string) {
 
 	//log.Println("Here")
 
-	chapterCount := strconv.Itoa(len(chaptersRes))
+	chapterCount := strconv.Itoa(len(finalChapters))
 	CE.UpdateResults("Downloading " + chapterCount + " chapters")
 
 	if chapterCount == "0" {

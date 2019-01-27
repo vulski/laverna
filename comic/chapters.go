@@ -44,8 +44,10 @@ func GetChapters(url string) []string {
 	CE.UpdateResults("Processing Chapters")
 	chapters := make([]string, 0)
 	doc.Find("div.chapter > a").Each(func(i int, selection *goquery.Selection) {
+		ComicStats.TotalChapters++
 		chapters = append(chapters, selection.AttrOr("href", "http://example.com"))
 	})
+
 	CE.UpdateResults("Processed Chapters")
 
 	return chapters
@@ -56,7 +58,6 @@ func DownloadChapter(chapter Chapter) {
 	CE.UpdateResults("Fetching Chapter Page")
 	doc := thek.FetchDocument(chapter.Uri)
 
-	//CE.UpdateResults("Push found images to queue")
 	doc.Find("[id=selectPage] > option").Each(func(i int, selection *goquery.Selection) {
 		pageUrl, exists := selection.Attr("value")
 		pageIdx := selection.Text()
@@ -71,6 +72,7 @@ func DownloadChapter(chapter Chapter) {
 					pageIdx: pageIdx,
 				}
 			}()
+			ComicStats.TotalPages++
 			TotalImages++
 		}
 	})

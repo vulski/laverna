@@ -69,7 +69,9 @@ func savePage(page Page) error {
 	//log.Println("Page Loaded")
 
 	if err != nil {
-		log.Fatalln(err)
+		//log.Println(err)
+		//log.Println("Couldn't get page")
+		return err
 	}
 
 	defer r.Body.Close()

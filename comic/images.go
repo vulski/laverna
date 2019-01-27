@@ -67,9 +67,11 @@ func imageWorker(id int) {
 
 				if err != nil {
 					DownloadedImages++
+					ComicStats.DownloadedPages++
 					di := strconv.Itoa(DownloadedImages)
 					ti := strconv.Itoa(TotalImages)
 
+					//AddMessage(di + " / " + ti + " downloaded images - " + idstring)
 					CE.UpdateResults(di + " / " + ti + " downloaded images - " + idstring)
 
 				} else {
@@ -80,6 +82,7 @@ func imageWorker(id int) {
 					})
 
 					DownloadedImages++
+					ComicStats.DownloadedPages++
 
 					di := strconv.Itoa(DownloadedImages)
 					ti := strconv.Itoa(TotalImages)
