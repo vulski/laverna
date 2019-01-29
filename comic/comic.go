@@ -1,38 +1,30 @@
 package comic
 
 import (
+	"laverna/adapters/fullcomicpro"
+	"laverna/bus"
 	"laverna/thek"
-	"log"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Globals
 const WorkerCount = 5
 
-type Stats struct {
-	RunningWorkers string
-	Messages []string
-	DownloadedPages int
-	TotalPages int
-	TotalChapters int
-}
-
-var ComicStats Stats
-
 func Init() {
 	thek.Init()
 
-	ChapterInit()
-	ImagesInit()
+	bus.ChapterInit()
+	bus.ImagesInit()
 }
 
 func Wait() {
 	thek.Wait()
 
-	ChapterWait()
-	ImagesWait()
+	bus.ChapterWait()
+	bus.ImagesWait()
 }
 
 func getComicName(url string) string {
@@ -43,54 +35,61 @@ func getComicName(url string) string {
 	return name
 }
 
-func GetPagination(url string) {
+func getChapters(comic_url string) []string {
+	chaptersRes := make([]string, 0)
+	finalChapters := make([]string, 0)
+	//run := true
+	counter := 1
+	//for run {
+	chaptersRes = fullcomicpro.GetChapters(comic_url + "?page=" + strconv.Itoa(counter))
+	//run = len(chaptersRes) > 0
+	counter++
 
+	//if run {
+	finalChapters = append(chaptersRes, finalChapters...)
+	bus.Stats.TotalChapters += len(finalChapters)
+	//}
+	//}
+
+	return finalChapters
 }
 
 func Download(url string) {
+	if(!startedUpdating) {
+		go Update()
+	}
+	bus.Stats.PushEvent("Downloading Yo")
+
 	url = strings.Trim(url, " ")
-	err := os.MkdirAll(DownloadDirectory, 0777)
+	err := os.MkdirAll(bus.DownloadDirectory, 0777)
 
 	if err != nil {
-		//log.Println("Could not make downloads directory")
 		return
 	}
 
-	CE.UpdateResults("Start Getting to it")
+	finalChapters := getChapters(url)
+	//log.Println(finalChapters)
+	//return
 
-	chaptersRes := make([]string, 0)
-	finalChapters := make([]string, 0)
-	run := true
-	counter := 1
-	for run {
-		chaptersRes = GetChapters(url + "?page=" + strconv.Itoa(counter))
-		run = len(chaptersRes) > 0
-		counter++
-
-		if run {
-			finalChapters = append(chaptersRes, finalChapters...)
-		}
-	}
-
-	CE.UpdateResults("Pushing chapters to channel")
 	for idx, chapter := range finalChapters {
 		name := getComicName(url)
-		chapters <- Chapter{
-			Uri:        chapter,
-			ChapterIdx: idx + 1,
-			ComicName:  name,
+		bus.Chapters <- bus.Chapter{
+			Uri:              "http://fullcomic.pro" + chapter,
+			ChapterIdx:       idx + 1,
+			ComicName:        name,
+			DownloadFunction: fullcomicpro.DownloadChapter,
 		}
-		chapterWaitGroup.Add(1)
+		bus.ChapterWaitGroup.Add(1)
 	}
+}
 
-	//log.Println("Here")
+var running = true
+var startedUpdating = false
 
-	chapterCount := strconv.Itoa(len(finalChapters))
-	CE.UpdateResults("Downloading " + chapterCount + " chapters")
-
-	if chapterCount == "0" {
-		log.Println("No chapters found - Possibly invalid url", url)
-		//CE.UpdateResults("Oh no! " + url)
-
+func Update() {
+	startedUpdating = true
+	for running {
+		CE.UpdateResults()
+		time.Sleep(150*time.Millisecond)
 	}
 }

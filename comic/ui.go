@@ -2,6 +2,7 @@ package comic
 
 import (
 	"fmt"
+	"laverna/bus"
 	"log"
 	"strconv"
 	"strings"
@@ -46,10 +47,10 @@ type CommandEditor struct {
 }
 
 func AddMessage(msg string) {
-	ComicStats.Messages = append(ComicStats.Messages, msg)
+	bus.Stats.Messages = append(bus.Stats.Messages, msg)
 }
 
-func (ce *CommandEditor) UpdateResults(msg string) {
+func (ce *CommandEditor) UpdateResults() {
 	ce.g.Update(func(g *gocui.Gui) error {
 		v, err := g.View("ctr")
 		if err != nil {
@@ -57,20 +58,18 @@ func (ce *CommandEditor) UpdateResults(msg string) {
 		}
 		v.Clear()
 
-		AddMessage(msg)
-
-		fmt.Fprintln(v, "Pages: " + strconv.Itoa(ComicStats.DownloadedPages) + "/" + strconv.Itoa(ComicStats.TotalPages))
-		fmt.Fprintln(v, "Total Chapters: " + strconv.Itoa(ComicStats.TotalChapters))
+		fmt.Fprintln(v, "Pages: " + strconv.Itoa(bus.Stats.DownloadedPages) + "/" + strconv.Itoa(bus.Stats.TotalPages))
+		fmt.Fprintln(v, "Total Chapters: " + strconv.Itoa(bus.Stats.TotalChapters))
 
 		fmt.Fprintln(v,"----------------------------------------")
 
 		// Build Message from Stats
-		if len(ComicStats.Messages) > 5 {
-			for _, msg := range ComicStats.Messages[len(ComicStats.Messages)-6 : len(ComicStats.Messages)] {
+		if len(bus.Stats.Messages) > 5 {
+			for _, msg := range bus.Stats.Messages[len(bus.Stats.Messages)-6 : len(bus.Stats.Messages)] {
 				fmt.Fprintln(v, msg)
 			}
 		} else {
-			for _, msg := range ComicStats.Messages {
+			for _, msg := range bus.Stats.Messages {
 				fmt.Fprintln(v, msg)
 			}
 		}
@@ -103,7 +102,7 @@ func (ce *CommandEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.M
 				//g.Update(SetFocus("hello"))
 				url := strings.TrimSpace(commandParts[1])
 				go Download(url)
-				ce.UpdateResults("|" + url + "|")
+				//ce.UpdateResults("|" + url + "|")
 			}
 
 		}

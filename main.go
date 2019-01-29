@@ -9,10 +9,9 @@ import (
 func main() {
 
 	comic.Init()
-	//defer comic.Wait()
+	defer comic.Wait()
 
 	comic.InitUi()
-
 	//scanner := bufio.NewScanner(os.Stdin)
 	//fmt.Print("Enter Comic Url: ")
 	//comicUrl := ""
