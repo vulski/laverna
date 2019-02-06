@@ -55,9 +55,9 @@ func getChapters(comic_url string) []string {
 }
 
 func Download(url string) {
-	if(!startedUpdating) {
-		go Update()
-	}
+	//if(!startedUpdating) {
+	//	go Update()
+	//}
 	bus.Stats.PushEvent("Downloading Yo")
 
 	url = strings.Trim(url, " ")

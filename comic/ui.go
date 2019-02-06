@@ -2,8 +2,13 @@ package comic
 
 import (
 	"fmt"
+	"github.com/asticode/go-astilectron"
+	"github.com/asticode/go-astilog"
 	"laverna/bus"
 	"log"
+	"net/http"
+
+	//"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -12,7 +17,7 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-const NumGoroutines = 10
+	const NumGoroutines = 10
 
 var (
 	done = make(chan struct{})
@@ -23,21 +28,122 @@ var (
 )
 
 func InitUi() {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	// Initialize astilectron
+	var a, err = astilectron.New(astilectron.Options{
+		AppName: "Laverna",
+		AppIconDefaultPath: "<your .png icon>", // If path is relative, it must be relative to the data directory
+		AppIconDarwinPath:  "<your .icns icon>", // Same here
+		BaseDirectoryPath: "./electron",
+	})
+	defer a.Close()
+
+
 	if err != nil {
-		log.Panicln(err)
+		log.Fatalln(err)
 	}
-	defer g.Close()
+	// Start astilectron
+	err = a.Start()
 
-	g.SetManagerFunc(layout)
-
-	if err := keybindings(g); err != nil {
-		log.Panicln(err)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		log.Panicln(err)
+	go func() {
+		http.ListenAndServe("127.0.0.1:4000", http.FileServer(http.Dir("./resources/app")))
+	}()
+
+	// Create a new window
+	w, err := a.NewWindow("http://127.0.0.1:4000", &astilectron.WindowOptions{
+		Center: astilectron.PtrBool(true),
+		Height: astilectron.PtrInt(600),
+		Width:  astilectron.PtrInt(600),
+	})
+
+	if err != nil {
+		log.Fatalln(err)
 	}
+
+	err = w.Create()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Add a listener on the window
+	w.On(astilectron.EventNameWindowEventResize, func(e astilectron.Event) (deleteListener bool) {
+		astilog.Info("Window resized")
+		return
+	})
+
+	// Init a new app menu
+	// You can do the same thing with a window
+	var m = a.NewMenu([]*astilectron.MenuItemOptions{
+		{
+			Label: astilectron.PtrStr("Separator"),
+			SubMenu: []*astilectron.MenuItemOptions{
+				{Label: astilectron.PtrStr("Normal 1")},
+				{
+					Label: astilectron.PtrStr("Normal 2"),
+					OnClick: func(e astilectron.Event) (deleteListener bool) {
+						astilog.Info("Normal 2 item has been clicked")
+						return
+					},
+				},
+				{Type: astilectron.MenuItemTypeSeparator},
+				{Label: astilectron.PtrStr("Normal 3")},
+			},
+		},
+		{
+			Label: astilectron.PtrStr("Checkbox"),
+			SubMenu: []*astilectron.MenuItemOptions{
+				{Checked: astilectron.PtrBool(true), Label: astilectron.PtrStr("Checkbox 1"), Type: astilectron.MenuItemTypeCheckbox},
+				{Label: astilectron.PtrStr("Checkbox 2"), Type: astilectron.MenuItemTypeCheckbox},
+				{Label: astilectron.PtrStr("Checkbox 3"), Type: astilectron.MenuItemTypeCheckbox},
+			},
+		},
+		{
+			Label: astilectron.PtrStr("Radio"),
+			SubMenu: []*astilectron.MenuItemOptions{
+				{Checked: astilectron.PtrBool(true), Label: astilectron.PtrStr("Radio 1"), Type: astilectron.MenuItemTypeRadio},
+				{Label: astilectron.PtrStr("Radio 2"), Type: astilectron.MenuItemTypeRadio},
+				{Label: astilectron.PtrStr("Radio 3"), Type: astilectron.MenuItemTypeRadio},
+			},
+		},
+		{
+			Label: astilectron.PtrStr("Roles"),
+			SubMenu: []*astilectron.MenuItemOptions{
+				{Label: astilectron.PtrStr("Minimize"), Role: astilectron.MenuItemRoleMinimize},
+				{Label: astilectron.PtrStr("Close"), Role: astilectron.MenuItemRoleClose},
+			},
+		},
+	})
+	// Open dev tools
+	w.OpenDevTools()
+
+	m.Create()
+
+	// This will send a message and execute a callback
+	// Callbacks are optional
+
+	// This will listen to messages sent by Javascript
+	w.OnMessage(func(m *astilectron.EventMessage) interface{} {
+		// Unmarshal
+		var s string
+		m.Unmarshal(&s)
+
+		println(s)
+		parts := strings.Split(s, " ")
+		log.Println(parts)
+
+		if len(parts) > 1 {
+			Download(parts[1])
+		}
+
+		return "Pressed Yo"
+	})
+
+	// Blocking pattern
+	a.Wait()
 
 }
 

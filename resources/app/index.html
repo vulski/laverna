@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html>
+
+<body>
+<h1>Hello World!</h1>
+
+<input type="text" id="url" placeholder="comic.com">
+<button id="getcomic">Download</button>
+
+<script>
+
+    document.getElementById("getcomic").addEventListener("click", function() {
+        var url = document.getElementById("url").value
+        astilectron.sendMessage("get " + url, function(message) {
+            console.log("received " + message)
+        });
+    })
+
+    // This will wait for the astilectron namespace to be ready
+    document.addEventListener('astilectron-ready', function() {
+        // This will listen to messages sent by GO
+        astilectron.onMessage(function(message) {
+            // Process message
+            console.log(message)
+        });
+    });
+
+    document.addEventListener("keydown", function (e) {
+        // astilectron.sendMessage("Button Pressed", function(message) {
+        //     console.log("received " + message)
+        // });
+    });
+
+</script>
+
+</body>
+
+</html>
