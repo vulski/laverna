@@ -79,9 +79,20 @@ func savePage(page Page) error {
 	//log.Println("Reading into memory")
 	bytes, readerr := ioutil.ReadAll(r.Body)
 
+	contentType := http.DetectContentType(bytes[0:512])
+
+	extension := "jpg"
+	if contentType == "image/jpeg" {
+		extension = "jpg"
+	} else if contentType == "image/png" {
+		extension = "png"
+	}
+
 	if readerr != nil {
 		log.Fatalln(readerr)
 	}
+
+	page.FilePath = page.FilePath + "." + extension
 
 	dirParts := strings.Split(page.FilePath, "/")
 	dir := strings.Join(dirParts[0:len(dirParts) - 1], "/")

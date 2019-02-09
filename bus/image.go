@@ -3,6 +3,7 @@ package bus
 import "sync"
 
 var Images = make(chan Image, 0)
+var Messages = make(chan string, 0)
 var ImageWaitGroup = sync.WaitGroup{}
 const DownloadDirectory = "./downloads/"
 

@@ -75,52 +75,11 @@ func InitUi() {
 		return
 	})
 
-	// Init a new app menu
-	// You can do the same thing with a window
-	var m = a.NewMenu([]*astilectron.MenuItemOptions{
-		{
-			Label: astilectron.PtrStr("Separator"),
-			SubMenu: []*astilectron.MenuItemOptions{
-				{Label: astilectron.PtrStr("Normal 1")},
-				{
-					Label: astilectron.PtrStr("Normal 2"),
-					OnClick: func(e astilectron.Event) (deleteListener bool) {
-						astilog.Info("Normal 2 item has been clicked")
-						return
-					},
-				},
-				{Type: astilectron.MenuItemTypeSeparator},
-				{Label: astilectron.PtrStr("Normal 3")},
-			},
-		},
-		{
-			Label: astilectron.PtrStr("Checkbox"),
-			SubMenu: []*astilectron.MenuItemOptions{
-				{Checked: astilectron.PtrBool(true), Label: astilectron.PtrStr("Checkbox 1"), Type: astilectron.MenuItemTypeCheckbox},
-				{Label: astilectron.PtrStr("Checkbox 2"), Type: astilectron.MenuItemTypeCheckbox},
-				{Label: astilectron.PtrStr("Checkbox 3"), Type: astilectron.MenuItemTypeCheckbox},
-			},
-		},
-		{
-			Label: astilectron.PtrStr("Radio"),
-			SubMenu: []*astilectron.MenuItemOptions{
-				{Checked: astilectron.PtrBool(true), Label: astilectron.PtrStr("Radio 1"), Type: astilectron.MenuItemTypeRadio},
-				{Label: astilectron.PtrStr("Radio 2"), Type: astilectron.MenuItemTypeRadio},
-				{Label: astilectron.PtrStr("Radio 3"), Type: astilectron.MenuItemTypeRadio},
-			},
-		},
-		{
-			Label: astilectron.PtrStr("Roles"),
-			SubMenu: []*astilectron.MenuItemOptions{
-				{Label: astilectron.PtrStr("Minimize"), Role: astilectron.MenuItemRoleMinimize},
-				{Label: astilectron.PtrStr("Close"), Role: astilectron.MenuItemRoleClose},
-			},
-		},
-	})
+
 	// Open dev tools
 	w.OpenDevTools()
 
-	m.Create()
+	//m.Create()
 
 	// This will send a message and execute a callback
 	// Callbacks are optional
@@ -137,14 +96,26 @@ func InitUi() {
 
 		if len(parts) > 1 {
 			Download(parts[1])
+			_ = w.SendMessage("Hello World")
 		}
 
 		return "Pressed Yo"
 	})
 
+	go WatchMessages(w)
+
 	// Blocking pattern
 	a.Wait()
 
+}
+
+func WatchMessages(w *astilectron.Window) {
+	for {
+		select {
+		case msg := <-bus.Messages:
+			w.SendMessage(msg)
+		}
+	}
 }
 
 type CommandEditor struct {

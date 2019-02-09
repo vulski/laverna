@@ -8,7 +8,25 @@
 <input type="text" id="url" placeholder="comic.com">
 <button id="getcomic">Download</button>
 
+<style>
+    .messages {
+        height: 600px;
+        width: 400px;
+        overflow-y: auto;
+        border: 1px solid red;
+    }
+</style>
+
+Messages:
+<div class="messages">
+
+</div>
+
+<script src="/jquery.js" onload="window.$ = window.jQuery = module.exports;"></script>
+
 <script>
+
+    $('.messages').append("Message 1")
 
     document.getElementById("getcomic").addEventListener("click", function() {
         var url = document.getElementById("url").value
@@ -22,7 +40,9 @@
         // This will listen to messages sent by GO
         astilectron.onMessage(function(message) {
             // Process message
-            console.log(message)
+            // console.log(message)
+            $('.messages').prepend("<p>" + message + "</p>")
+            // document.body.append("Hello")
         });
     });
 
