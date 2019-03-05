@@ -18,7 +18,11 @@ type Scraper interface {
 	GetComic(string) (*comic.Comic, error)
 }
 
-var scrapers = []Scraper{FullComicProScraper{}}
+var Scrapers = []Scraper{}
+
+func RegisterScraper(scraper Scraper) {
+	Scrapers = append(Scrapers, scraper)
+}
 
 func CreateScraper(URL string) (Scraper, error) {
 	u, err := url.Parse(URL)
@@ -28,7 +32,7 @@ func CreateScraper(URL string) (Scraper, error) {
 	}
 
 	domain := u.Hostname()
-	for _, scraper := range scrapers {
+	for _, scraper := range Scrapers {
 		if scraper.Domain() == domain {
 			return scraper, nil
 		}
@@ -50,22 +54,4 @@ func FetchDocument(url string) *goquery.Document {
 		log.Fatalln(docerr)
 	}
 	return doc
-}
-
-type FullComicProScraper struct {
-}
-
-func (d FullComicProScraper) GetComic(url string) (*comic.Comic, error) {
-	cmc := comic.Comic{Url: url}
-	doc := FetchDocument(url)
-
-	doc.Find(".scroll-eps > a").Each(func(i int, selection *goquery.Selection) {
-		cmc.Chapters = append(cmc.Chapters, &comic.Chapter{Url: d.Domain() + selection.AttrOr("href", "http://example.com"), Comic: &cmc})
-	})
-
-	return &cmc, nil
-}
-
-func (d FullComicProScraper) Domain() string {
-	return "fullcomic.pro"
 }
