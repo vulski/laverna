@@ -8,12 +8,14 @@ type Comic struct {
 }
 
 type Chapter struct {
+	Comic  *Comic
 	Number int
 	Url    string
 	Pages  []*Page
 }
 
 type Page struct {
+	Chapter  *Chapter
 	Number   int
 	ImageUrl string
 }
