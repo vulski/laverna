@@ -1,15 +1,16 @@
 package fullcomicpro
 
 import (
-	"github.com/pkg/errors"
 	"laverna/bus"
 	"laverna/thek"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
-func DownloadImage(image bus.Image) {
+func (d *FullComicProDownloader) DownloadImage(image bus.Image) {
 	downloadPath, err := GetDownloadPath(image)
 	bus.Messages <- "Downloading " + downloadPath
 
@@ -24,7 +25,7 @@ func DownloadImage(image bus.Image) {
 	}
 }
 
-func GetDownloadPath(image bus.Image) (string, error) {
+func (d *FullComicProDownloader) GetDownloadPath(image bus.Image) (string, error) {
 	chapterIdxString := strconv.Itoa(image.Chapter.ChapterIdx)
 	chapterDownloadDirectory := bus.DownloadDirectory + image.Chapter.ComicName + "/" + chapterIdxString + "/"
 	//splitUrl := strings.Split(image.PageUrl, ".")

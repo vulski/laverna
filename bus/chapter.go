@@ -21,9 +21,9 @@ func (s *stats) PushEvent(msg string) {
 var Stats stats
 
 type Chapter struct {
-	Uri        string
-	ChapterIdx int
-	ComicName  string
+	Uri              string
+	ChapterIdx       int
+	ComicName        string
 	DownloadFunction func(chapter Chapter)
 }
 

@@ -1,13 +1,21 @@
 package fullcomicpro
 
 import (
-	"github.com/PuerkitoBio/goquery"
 	"laverna/bus"
 	"laverna/thek"
 	"strconv"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
-func GetChapters(url string) []string {
+var FullComicProDownloader struct {
+}
+
+func (d *FullComicProDownloader) Domain() string {
+	return "fullcomic.pro"
+}
+
+func (d *FullComicProDownloader) GetChapters(string) []string {
 	doc := thek.FetchDocument(url)
 
 	chapters := make([]string, 0)
@@ -19,7 +27,7 @@ func GetChapters(url string) []string {
 	return chapters
 }
 
-func DownloadChapter(chapter bus.Chapter) {
+func (d *FullComicProDownloader) DownloadChapter(chapter bus.Chapter) {
 	doc := thek.FetchDocument(chapter.Uri + "?readType=1")
 
 	bus.Stats.PushEvent("Downloading Chapter " + strconv.Itoa(chapter.ChapterIdx))
@@ -34,10 +42,10 @@ func DownloadChapter(chapter bus.Chapter) {
 
 			go func() {
 				bus.Images <- bus.Image{
-					PageUrl: pageUrl,
-					Chapter: chapter,
-					PageIdx: pageIdx,
-					DownloadFunction:DownloadImage,
+					PageUrl:          pageUrl,
+					Chapter:          chapter,
+					PageIdx:          pageIdx,
+					DownloadFunction: DownloadImage,
 				}
 			}()
 			bus.Stats.TotalPages++

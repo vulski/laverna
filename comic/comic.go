@@ -10,8 +10,21 @@ import (
 	"time"
 )
 
-// Globals
 const WorkerCount = 5
+
+type ComicDownloader interface {
+	SetDownloadDir(string) error
+
+	Domain() string
+
+	GetChapters(string) []string
+	DownloadChapter(bus.Chapter)
+
+	DownloadImage(bus.Image)
+	GetDownloadPath(bus.Image) (string, error)
+}
+
+var ComicDownloaders = []*ComicDownloader{&fullcomicpro.FullComicProDownloader}
 
 func Init() {
 	thek.Init()
@@ -27,37 +40,27 @@ func Wait() {
 	bus.ImagesWait()
 }
 
+// This looks like its fullcomic.pro specific, should :100: be in the interface
 func getComicName(url string) string {
 	nameParts := strings.Split(url, "/")
-	namePartsLength := len(nameParts)
-	name := nameParts[namePartsLength-1]
 
-	return name
+	return nameParts[len(nameParts)-1]
 }
 
 func getChapters(comic_url string) []string {
 	chaptersRes := make([]string, 0)
 	finalChapters := make([]string, 0)
-	//run := true
 	counter := 1
-	//for run {
 	chaptersRes = fullcomicpro.GetChapters(comic_url + "?page=" + strconv.Itoa(counter))
-	//run = len(chaptersRes) > 0
 	counter++
 
-	//if run {
 	finalChapters = append(chaptersRes, finalChapters...)
 	bus.Stats.TotalChapters += len(finalChapters)
-	//}
-	//}
 
 	return finalChapters
 }
 
 func Download(url string) {
-	//if(!startedUpdating) {
-	//	go Update()
-	//}
 	bus.Stats.PushEvent("Downloading Yo")
 
 	url = strings.Trim(url, " ")
@@ -68,8 +71,6 @@ func Download(url string) {
 	}
 
 	finalChapters := getChapters(url)
-	//log.Println(finalChapters)
-	//return
 
 	for idx, chapter := range finalChapters {
 		name := getComicName(url)
@@ -90,6 +91,6 @@ func Update() {
 	startedUpdating = true
 	for running {
 		CE.UpdateResults()
-		time.Sleep(150*time.Millisecond)
+		time.Sleep(150 * time.Millisecond)
 	}
 }
