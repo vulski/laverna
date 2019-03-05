@@ -12,18 +12,6 @@ import (
 
 const WorkerCount = 5
 
-type ComicDownloader interface {
-	SetDownloadDir(string) error
-
-	Domain() string
-
-	GetChapters(string) []string
-	DownloadChapter(bus.Chapter)
-
-	DownloadImage(bus.Image)
-	GetDownloadPath(bus.Image) (string, error)
-}
-
 var ComicDownloaders = []*ComicDownloader{&fullcomicpro.FullComicProDownloader}
 
 func Init() {
