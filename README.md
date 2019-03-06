@@ -31,7 +31,7 @@ for submitting pull requests to us.
 
 * **James Horton** - *Creater/Author* - [Valeness](https://gitlab.com/Valeness)
 
-* **Dean Martin** - *Some guy that refactoring this crap code* - [dean-martin](https://github.com/dean-martin)
+* **Dean Martin** - *Some guy that refactored this messy code* - [dean-martin](https://github.com/dean-martin)
 
 See also the list of [contributors](https://github.com/dean-martin/laverna/contributors) who participated
 in this project.
