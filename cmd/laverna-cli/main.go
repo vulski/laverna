@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"gitlab.com/PaperStreetHouse/laverna/internal/pkg/scrapers"
-	"gitlab.com/PaperStreetHouse/laverna/pkg/scraper"
+	"github.com/dean-martin/laverna/internal/pkg/scrapers"
+	"github.com/dean-martin/laverna/pkg/scraper"
 )
 
 func main() {

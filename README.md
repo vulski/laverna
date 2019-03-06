@@ -7,15 +7,15 @@ Pull Requests encouraged!
 
 ## Installing
 
-Note: Installing won't work because it's still using gitlab.com paths, /shrug
 
 ```bash
-go install github.com/dean-martin/laverna
+go install github.com/dean-martin/laverna/cmd/laverna-cli
 ```
 
 ## Usage
 When prompted
 ```
+$ larverna-cli
 // Example
 Enter Comic Url:  http://fullcomic.pro/comic-the-walking-dead
 ```
