@@ -9,11 +9,13 @@ import (
 
 	"github.com/vulski/laverna/pkg/scraper"
 	"github.com/vulski/laverna/pkg/scrapers/fullcomicpro"
+	"github.com/vulski/laverna/pkg/scrapers/xoxocomics"
 )
 
 func main() {
 	// Register your scraper
 	scraper.RegisterScraper(fullcomicpro.Scraper{})
+	scraper.RegisterScraper(xoxocomics.Scraper{})
 
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Enter Comic Url: ")

@@ -31,7 +31,7 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 		return nil, err
 	}
 
-	doc.Find(".title > a").Each(func(i int, selection *goquery.Selection) {
+	doc.Find(".title-detail").Each(func(i int, selection *goquery.Selection) {
 		book.Title = selection.Text()
 	})
 
@@ -44,7 +44,7 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 
 	var outsideErr error
 	// Get Chapters
-	doc.Find(".scroll-eps > a").EachWithBreak(func(i int, selection *goquery.Selection) bool {
+	doc.Find("div chapters > a").EachWithBreak(func(i int, selection *goquery.Selection) bool {
 		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
 
 		// Get Pages for each chapter
@@ -54,8 +54,8 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 			return false
 		}
 
-		doc.Find("[id=imgPages] > img").Each(func(i int, selection *goquery.Selection) {
-			pageUrl, exists := selection.Attr("src")
+		doc.Find("[id=selectPage] > option").Each(func(i int, selection *goquery.Selection) {
+			pageUrl, exists := selection.Attr("value")
 			pageIndx := i + 1
 			if exists {
 				chp.Pages = append(chp.Pages, &comic.Page{Url: pageUrl, Number: pageIndx, Chapter: &chp})
