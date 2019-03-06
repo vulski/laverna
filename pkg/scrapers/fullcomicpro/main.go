@@ -44,7 +44,15 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 
 	var outsideErr error
 	// Get Chapters
-	doc.Find(".scroll-eps > a").EachWithBreak(func(i int, selection *goquery.Selection) bool {
+	chps := doc.Find(".scroll-eps > a")
+	nodes := chps.Nodes
+	// Reverse chapter order
+	for i := len(nodes)/2 - 1; i >= 0; i-- {
+		opp := len(nodes) - 1 - i
+		nodes[i], nodes[opp] = nodes[opp], nodes[i]
+	}
+	chps.Nodes = nodes
+	chps.EachWithBreak(func(i int, selection *goquery.Selection) bool {
 		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
 
 		// Get Pages for each chapter

@@ -46,6 +46,7 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 	// Get Chapters
 	chps := doc.Find(".col-xs-9 > a")
 	nodes := chps.Nodes
+	// Reverse chapter order
 	for i := len(nodes)/2 - 1; i >= 0; i-- {
 		opp := len(nodes) - 1 - i
 		nodes[i], nodes[opp] = nodes[opp], nodes[i]
