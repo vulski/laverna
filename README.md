@@ -1,5 +1,5 @@
 # Laverna
-Heavily refactoring fork from https://gitlab.com/PaperStreetHouse/laverna
+Heavily refactored fork from https://gitlab.com/PaperStreetHouse/laverna
 
 For now, only works with http://fullcomic.pro links
 
