@@ -7,40 +7,64 @@ import (
 	"os"
 	"strings"
 
+	"github.com/vulski/laverna/pkg/comic"
 	"github.com/vulski/laverna/pkg/scraper"
 	"github.com/vulski/laverna/pkg/scrapers/fullcomicpro"
 	"github.com/vulski/laverna/pkg/scrapers/xoxocomics"
 )
 
-func main() {
+var hydrateChan chan string
+
+func init() {
+	hydrateChan = make(chan string, 100)
+
 	// Register your scraper
 	scraper.RegisterScraper(fullcomicpro.Scraper{})
 	scraper.RegisterScraper(xoxocomics.Scraper{})
+}
 
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("Enter Comic Url: ")
-	comicUrl := ""
-	scanner.Scan()
-	comicUrl = scanner.Text()
-
-	if scanner.Err() != nil {
-		log.Println(scanner.Err())
-	}
-
-	comicUrl = strings.Trim(comicUrl, " ")
-
-	fmt.Println(comicUrl)
-
-	scrp, err := scraper.CreateScraper(comicUrl)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	fmt.Println("Using scraper for host: " + scrp.Domain())
-	comic, err := scrp.GetBook(comicUrl)
-	err = comic.Download("comics")
+func createBook(urls chan string) {
+	url := <-urls
+	scrp, err := scraper.CreateScraper(url)
 	if err != nil {
 		panic(err)
+	}
+
+	book, err := scrp.GetBook(url)
+	if err != nil {
+		panic(err)
+	}
+
+	go func(*comic.Book) {
+		book.Download("comics")
+	}(book)
+}
+
+func main() {
+	f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+
+	go createBook(hydrateChan)
+
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		fmt.Print("Enter Comic Url: ")
+		comicUrl := ""
+		scanner.Scan()
+		comicUrl = scanner.Text()
+
+		if scanner.Err() != nil {
+			panic(scanner.Err())
+		}
+
+		comicUrl = strings.Trim(comicUrl, " ")
+
+		hydrateChan <- comicUrl
+		fmt.Println("Sent that sucka")
 	}
 }
