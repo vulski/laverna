@@ -1,0 +1,43 @@
+package comic
+
+import (
+	"errors"
+	"log"
+	"os"
+	"path/filepath"
+	"strconv"
+)
+
+type Chapter struct {
+	Book   *Book
+	Number int
+	Url    string
+	Pages  []*Page
+}
+
+func (c *Chapter) GetPage(number int) (*Page, error) {
+	for _, page := range c.Pages {
+		if page.Number == number {
+			return page, nil
+		}
+	}
+
+	return nil, errors.New("Page not found.")
+}
+
+func (c *Chapter) Download(dir string) error {
+	log.Println("Downloading Chapter: " + strconv.Itoa(c.Number))
+	dir = filepath.Join(dir, strconv.Itoa(c.Number))
+	err := os.MkdirAll(dir, 0777)
+	if err != nil {
+		return err
+	}
+	for _, page := range c.Pages {
+		err := page.Download(dir)
+		if err != nil {
+			return err
+		}
+	}
+	log.Println("Finished downloading chapter")
+	return nil
+}

@@ -14,6 +14,7 @@ type Scraper interface {
 	// Domain the scraper should be used for.
 	Domain() string
 
+	// Get the book with the given URL.
 	GetBook(string) (*comic.Book, error)
 }
 
