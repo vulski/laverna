@@ -15,7 +15,7 @@ type Scraper interface {
 	// Domain the scraper should be used for.
 	Domain() string
 
-	GetComic(string) (*comic.Comic, error)
+	GetBook(string) (*comic.Book, error)
 }
 
 var Scrapers = []Scraper{}

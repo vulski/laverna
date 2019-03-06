@@ -1,7 +1,8 @@
 package scrapers
 
 import (
-	"strconv"
+	"fmt"
+	"net/url"
 
 	"github.com/PuerkitoBio/goquery"
 	"gitlab.com/PaperStreetHouse/laverna/pkg/comic"
@@ -11,20 +12,28 @@ import (
 type FullComicProScraper struct {
 }
 
-func (d FullComicProScraper) GetComic(url string) (*comic.Comic, error) {
-	book := comic.Book{Url: url}
-	doc := scraper.FetchDocument(url)
+func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
+	book := comic.Book{Url: Url}
+
+	u, err := url.Parse(Url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	doc := scraper.FetchDocument(Url)
 
 	doc.Find(".scroll-eps > a").Each(func(i int, selection *goquery.Selection) {
-		chp := comic.Chapter{Url: d.Domain() + selection.AttrOr("href", "http://example.com"), Book: &book}
-
+		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Book: &book}
 		doc = scraper.FetchDocument(chp.Url + "?readType=1")
 
 		doc.Find("[id=imgPages] > img").Each(func(i int, selection *goquery.Selection) {
 			pageUrl, exists := selection.Attr("src")
-			pageIndx := strconv.Itoa(i + 1)
+			pageIndx := i + 1
+			fmt.Println(pageUrl)
 			if exists {
-				chp.Pages = append(chp.Pages, &Page{Url: pageUrl, Number: pageIndx, Chapter: &chp})
+				fmt.Println("Found!")
+				chp.Pages = append(chp.Pages, &comic.Page{Url: pageUrl, Number: pageIndx, Chapter: &chp})
 			}
 		})
 
