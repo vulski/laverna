@@ -13,7 +13,7 @@ go install github.com/dean-martin/laverna/cmd/laverna-cli
 ```
 
 ## Usage
-When prompted
+When prompted (Note: it's going to download everything into your current directory + 'comics' folder)
 ```
 $ larverna-cli
 // Example
