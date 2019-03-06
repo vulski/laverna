@@ -1,4 +1,4 @@
-package scrapers
+package fullcomicpro
 
 import (
 	"errors"
@@ -11,14 +11,14 @@ import (
 	"github.com/vulski/laverna/pkg/scraper"
 )
 
-type FullComicProScraper struct {
+type Scraper struct {
 }
 
-func (d FullComicProScraper) Domain() string {
+func (d Scraper) Domain() string {
 	return "fullcomic.pro"
 }
 
-func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
+func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 	u, err := url.Parse(Url)
 	if err != nil {
 		return nil, err
