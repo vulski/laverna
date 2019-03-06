@@ -19,7 +19,7 @@ func (d Scraper) Domain() string {
 }
 
 func (d Scraper) GetBook(Url string) (*comic.Book, error) {
-	u, err := url.Parse(Url)
+	_, err := url.Parse(Url)
 	if err != nil {
 		return nil, err
 	}
@@ -44,22 +44,45 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 
 	var outsideErr error
 	// Get Chapters
-	doc.Find("div chapters > a").EachWithBreak(func(i int, selection *goquery.Selection) bool {
-		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
+	chps := doc.Find(".col-xs-9 > a")
+	nodes := chps.Nodes
+	for i := len(nodes)/2 - 1; i >= 0; i-- {
+		opp := len(nodes) - 1 - i
+		nodes[i], nodes[opp] = nodes[opp], nodes[i]
+	}
+	chps.Nodes = nodes
+	chps.EachWithBreak(func(i int, selection *goquery.Selection) bool {
+		chp := comic.Chapter{Url: selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
 
 		// Get Pages for each chapter
-		doc, err = scraper.FetchDocument(chp.Url + "?readType=1")
+		doc, err = scraper.FetchDocument(chp.Url)
 		if err != nil {
 			outsideErr = err
 			return false
 		}
 
-		doc.Find("[id=selectPage] > option").Each(func(i int, selection *goquery.Selection) {
+		doc.Find("[id=selectPage] > option").EachWithBreak(func(i int, selection *goquery.Selection) bool {
 			pageUrl, exists := selection.Attr("value")
-			pageIndx := i + 1
-			if exists {
-				chp.Pages = append(chp.Pages, &comic.Page{Url: pageUrl, Number: pageIndx, Chapter: &chp})
+			if !exists {
+				return true
 			}
+			doc, err = scraper.FetchDocument(pageUrl)
+			if err != nil {
+				outsideErr = err
+				return false
+			}
+
+			doc.Find("[id=page_" + strconv.Itoa(i+1) + "] > img").EachWithBreak(func(i int, selection *goquery.Selection) bool {
+				pageUrl, exists := selection.Attr("src")
+				pageIndx := i + 1
+
+				if exists {
+					chp.Pages = append(chp.Pages, &comic.Page{Url: pageUrl, Number: pageIndx, Chapter: &chp})
+				}
+
+				return true
+			})
+			return true
 		})
 
 		log.Println("Found Chapter " + strconv.Itoa(chp.Number) + " -- " + strconv.Itoa(len(chp.Pages)) + " pages.")
