@@ -38,7 +38,7 @@ func createBook(urls chan string) {
 	}
 
 	fmt.Println("Finished hydrating book, downloading: " + book.Title)
-	go func(*comic.Book) {
+	go func(book *comic.Book) {
 		book.Download("comics")
 		fmt.Println("Finished downloading: " + book.Title)
 	}(book)
