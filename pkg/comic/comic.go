@@ -1,6 +1,6 @@
 package comic
 
-type Comic struct {
+type Book struct {
 	Title    string
 	Author   string
 	Url      string
@@ -8,21 +8,21 @@ type Comic struct {
 }
 
 type Chapter struct {
-	Comic  *Comic
+	Book   *Book
 	Number int
 	Url    string
 	Pages  []*Page
 }
 
 type Page struct {
-	Chapter  *Chapter
-	Number   int
-	ImageUrl string
+	Chapter *Chapter
+	Number  int
+	Url     string
 }
 
 //TODO
-func (cm *Comic) Download(dir string) error {
-	for _, chp := range cm.Chapters {
+func (book *Book) Download(dir string) error {
+	for _, chp := range book.Chapters {
 		err := chp.Download(dir)
 		if err != nil {
 			return err

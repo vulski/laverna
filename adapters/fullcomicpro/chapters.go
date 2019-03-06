@@ -18,7 +18,7 @@ func (d *FullComicProDownloader) Domain() string {
 func (d *FullComicProDownloader) GetChapters(string) []string {
 	doc := thek.FetchDocument(url)
 
-	chapters := make([]string)
+	chapters := make([]string, 0)
 	doc.Find(".scroll-eps > a").Each(func(i int, selection *goquery.Selection) {
 		//ComicStats.TotalChapters++
 		chapters = append(chapters, selection.AttrOr("href", "http://example.com"))

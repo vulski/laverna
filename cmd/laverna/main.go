@@ -12,12 +12,6 @@ import (
 )
 
 func main() {
-
-	// comic.Init()
-	// defer comic.Wait()
-
-	// comic.InitUi()
-
 	// Register your scraper
 	scraper.RegisterScraper(scrapers.FullComicProScraper{})
 
