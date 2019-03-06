@@ -37,8 +37,8 @@ func main() {
 
 	fmt.Println("Using scraper for host: " + scrp.Domain())
 	comic, err := scrp.GetBook(comicUrl)
-	fmt.Println(comic.Author)
-	for _, chp := range comic.Chapters {
-		fmt.Println(chp.Url)
+	err = comic.Download(".")
+	if err != nil {
+		panic(err)
 	}
 }
