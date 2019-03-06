@@ -7,7 +7,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	"github.com/dean-martin/laverna/pkg/comic"
+	"github.com/vulski/laverna/pkg/comic"
 )
 
 type Scraper interface {

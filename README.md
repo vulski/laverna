@@ -29,6 +29,8 @@ for submitting pull requests to us.
 
 ## Authors
 
+** Original repo: ** [PaperStreetHouse/laverna](https://gitlab.com/PaperStreetHouse/laverna)
+
 * **James Horton** - *Creater/Author* - [Valeness](https://gitlab.com/Valeness)
 
 * **Dean Martin** - *Some guy that refactored this messy code* - [dean-martin](https://github.com/dean-martin)

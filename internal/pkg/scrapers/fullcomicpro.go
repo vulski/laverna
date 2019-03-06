@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/dean-martin/laverna/pkg/comic"
-	"github.com/dean-martin/laverna/pkg/scraper"
+	"github.com/vulski/laverna/pkg/comic"
+	"github.com/vulski/laverna/pkg/scraper"
 )
 
 type FullComicProScraper struct {
