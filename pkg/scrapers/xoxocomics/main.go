@@ -86,6 +86,7 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 
 				return true
 			})
+			fmt.Println(chp.Pages)
 			return true
 		})
 
