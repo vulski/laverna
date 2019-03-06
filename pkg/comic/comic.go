@@ -34,7 +34,7 @@ type Page struct {
 func (book *Book) GetChapter(number int) (*Chapter, error) {
 	for _, chp := range book.Chapters {
 		if chp.Number == number {
-			return &chp, nil
+			return chp, nil
 		}
 	}
 
@@ -62,7 +62,7 @@ func (book *Book) Download(dir string) error {
 func (c *Chapter) GetPage(number int) (*Page, error) {
 	for _, page := range c.Pages {
 		if page.Number == number {
-			return &page, nil
+			return page, nil
 		}
 	}
 
