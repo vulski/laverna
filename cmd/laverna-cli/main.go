@@ -27,16 +27,20 @@ func createBook(urls chan string) {
 	url := <-urls
 	scrp, err := scraper.CreateScraper(url)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 
 	book, err := scrp.GetBook(url)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 
+	fmt.Println("Finished hydrating book, downloading: " + book.Title)
 	go func(*comic.Book) {
 		book.Download("comics")
+		fmt.Println("Finished downloading: " + book.Title)
 	}(book)
 }
 
