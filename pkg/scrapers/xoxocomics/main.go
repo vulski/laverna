@@ -2,6 +2,7 @@ package xoxocomics
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/url"
 	"strconv"
@@ -67,6 +68,7 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 			if !exists {
 				return true
 			}
+
 			doc, err = scraper.FetchDocument(pageUrl)
 			if err != nil {
 				outsideErr = err
@@ -74,6 +76,7 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 			}
 
 			doc.Find("[id=page_" + strconv.Itoa(i+1) + "] > img").EachWithBreak(func(i int, selection *goquery.Selection) bool {
+				fmt.Println("found page for chapter: " + strconv.Itoa(chp.Number))
 				pageUrl, exists := selection.Attr("src")
 				pageIndx := i + 1
 
