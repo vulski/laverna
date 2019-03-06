@@ -1,7 +1,9 @@
 package scrapers
 
 import (
+	"log"
 	"net/url"
+	"strconv"
 
 	"github.com/PuerkitoBio/goquery"
 	"gitlab.com/PaperStreetHouse/laverna/pkg/comic"
@@ -12,22 +14,31 @@ type FullComicProScraper struct {
 }
 
 func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
-	book := comic.Book{Url: Url, Title: "-lazy"}
-
 	u, err := url.Parse(Url)
-
 	if err != nil {
 		return nil, err
 	}
 
-	doc := scraper.FetchDocument(Url)
+	book := comic.Book{Url: Url, Title: ""}
+	log.Println("Found book")
 
+	doc, err := scraper.FetchDocument(Url)
+	if err != nil {
+		return nil, err
+	}
+
+	var outsideErr error
 	// Get Chapters
-	doc.Find(".scroll-eps > a").Each(func(i int, selection *goquery.Selection) {
+	doc.Find(".scroll-eps > a").EachWithBreak(func(i int, selection *goquery.Selection) bool {
 		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
 
 		// Get Pages for each chapter
-		doc = scraper.FetchDocument(chp.Url + "?readType=1")
+		doc, err = scraper.FetchDocument(chp.Url + "?readType=1")
+		if err != nil {
+			outsideErr = err
+			return false
+		}
+
 		doc.Find("[id=imgPages] > img").Each(func(i int, selection *goquery.Selection) {
 			pageUrl, exists := selection.Attr("src")
 			pageIndx := i + 1
@@ -36,8 +47,14 @@ func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
 			}
 		})
 
+		log.Println("Found Chapter " + strconv.Itoa(chp.Number) + " -- " + strconv.Itoa(len(chp.Pages)) + " pages.")
 		book.Chapters = append(book.Chapters, &chp)
+		return true
 	})
+
+	if nil != outsideErr {
+		return nil, outsideErr
+	}
 
 	return &book, nil
 }

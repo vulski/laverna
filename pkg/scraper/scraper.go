@@ -2,7 +2,6 @@ package scraper
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -41,17 +40,17 @@ func CreateScraper(URL string) (Scraper, error) {
 	return nil, errors.New("Couldn't find a scraper for that url.")
 }
 
-func FetchDocument(url string) *goquery.Document {
+func FetchDocument(url string) (*goquery.Document, error) {
 	r, err := http.Get(url)
 
 	if err != nil {
-		log.Fatalln(err)
+		return nil, nil
 	}
 
 	doc, docerr := goquery.NewDocumentFromReader(r.Body)
 
 	if docerr != nil {
-		log.Fatalln(docerr)
+		return nil, nil
 	}
-	return doc
+	return doc, nil
 }
