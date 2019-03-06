@@ -70,6 +70,7 @@ func (c *Chapter) GetPage(number int) (*Page, error) {
 }
 
 func (c *Chapter) Download(dir string) error {
+	log.Println("Downloading Chapter: " + strconv.Itoa(c.Number))
 	dir = filepath.Join(dir, strconv.Itoa(c.Number))
 	err := os.MkdirAll(dir, 0777)
 	if err != nil {
@@ -81,10 +82,12 @@ func (c *Chapter) Download(dir string) error {
 			return err
 		}
 	}
+	log.Println("Finished downloading chapter")
 	return nil
 }
 
 func (p *Page) Download(dir string) error {
+	log.Println("Downloading page: " + strconv.Itoa(p.Number))
 	r, err := http.Get(p.Url)
 
 	if err != nil {
@@ -114,5 +117,6 @@ func (p *Page) Download(dir string) error {
 		return err
 	}
 
+	log.Println("Finished downloading page.")
 	return nil
 }
