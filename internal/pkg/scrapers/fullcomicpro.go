@@ -32,7 +32,6 @@ func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
 			pageIndx := i + 1
 			fmt.Println(pageUrl)
 			if exists {
-				fmt.Println("Found!")
 				chp.Pages = append(chp.Pages, &comic.Page{Url: pageUrl, Number: pageIndx, Chapter: &chp})
 			}
 		})
