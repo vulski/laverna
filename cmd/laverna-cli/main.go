@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/vulski/laverna/pkg/comic"
 	"github.com/vulski/laverna/pkg/scraper"
 	"github.com/vulski/laverna/pkg/scrapers/fullcomicpro"
 	"github.com/vulski/laverna/pkg/scrapers/xoxocomics"
@@ -33,10 +32,8 @@ func createBook(url string) {
 	}
 
 	fmt.Println("Finished hydrating book, downloading: " + book.Title)
-	go func(book *comic.Book) {
-		book.Download("comics")
-		fmt.Println("Finished downloading: " + book.Title)
-	}(book)
+	book.Download("comics")
+	fmt.Println("Finished downloading: " + book.Title)
 }
 
 func main() {
