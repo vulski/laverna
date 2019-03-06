@@ -1,6 +1,7 @@
 package scrapers
 
 import (
+	"errors"
 	"log"
 	"net/url"
 	"strconv"
@@ -19,13 +20,22 @@ func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
 		return nil, err
 	}
 
-	book := comic.Book{Url: Url, Title: ""}
-	log.Println("Found book")
+	book := comic.Book{Url: Url}
 
 	doc, err := scraper.FetchDocument(Url)
 	if err != nil {
 		return nil, err
 	}
+
+	doc.Find(".title > a").Each(func(i int, selection *goquery.Selection) {
+		book.Title = selection.Text()
+	})
+	if book.Title == "" {
+		log.Println("Couldn't find book.")
+		return nil, errors.New("Couldn't find book")
+	}
+
+	log.Println("Found book " + book.Title)
 
 	var outsideErr error
 	// Get Chapters
