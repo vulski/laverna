@@ -1,37 +1,23 @@
 # Laverna
-Download Your Comics
-For now, only works with http://xoxocomics.com links
+Heavily refactoring fork from https://gitlab.com/PaperStreetHouse/laverna
+
+For now, only works with http://fullcomic.pro links
 
 Pull Requests encouraged!
 
-## Build
+## Installing
+
+Note: Installing won't work because it's still using gitlab.com paths, /shrug
 
 ```bash
-# Just build all the binaries
-scripts/build.sh
-
-# Build binaries and upload them to gitlab for release tagging
-cp .env.example .env # Fill out .env with private token and project id
-
-source .env && scripts/build.sh upload
-
-```
-
-## Run
-```bash
-cd ~/go/src/
-git@gitlab.com:PaperStreetHouse/laverna.git
-cd laverna/
-go build -o ~/go/bin/laverna main.go
-~/go/bin/laverna
+go install github.com/dean-martin/laverna
 ```
 
 ## Usage
 When prompted
 ```
-// Commands
-get [url]
-
 // Example
-get http://xoxocomics.com/comic/miles-morales-ultimate-spider-man
+Enter Comic Url:  http://fullcomic.pro/comic-the-walking-dead
 ```
+
+
