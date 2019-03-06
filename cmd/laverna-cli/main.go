@@ -18,7 +18,7 @@ func init() {
 	scraper.RegisterScraper(xoxocomics.Scraper{})
 }
 
-func createBook(url string) {
+func downloadBook(url string) {
 	scrp, err := scraper.CreateScraper(url)
 	if err != nil {
 		fmt.Println(err)
@@ -58,7 +58,7 @@ func main() {
 
 		comicUrl = strings.Trim(comicUrl, " ")
 
-		go createBook(comicUrl)
+		go downloadBook(comicUrl)
 		fmt.Println("Sent that sucka")
 	}
 }
