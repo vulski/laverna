@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -13,18 +12,13 @@ import (
 	"github.com/vulski/laverna/pkg/scrapers/xoxocomics"
 )
 
-var hydrateChan chan string
-
 func init() {
-	hydrateChan = make(chan string, 100)
-
 	// Register your scraper
 	scraper.RegisterScraper(fullcomicpro.Scraper{})
 	scraper.RegisterScraper(xoxocomics.Scraper{})
 }
 
-func createBook(urls chan string) {
-	url := <-urls
+func createBook(url string) {
 	scrp, err := scraper.CreateScraper(url)
 	if err != nil {
 		fmt.Println(err)
@@ -45,14 +39,12 @@ func createBook(urls chan string) {
 }
 
 func main() {
-	f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	defer f.Close()
-	log.SetOutput(f)
-
-	go createBook(hydrateChan)
+	// f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	// if err != nil {
+	// 	log.Fatalf("error opening file: %v", err)
+	// }
+	// defer f.Close()
+	// log.SetOutput(f)
 
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -68,7 +60,7 @@ func main() {
 
 		comicUrl = strings.Trim(comicUrl, " ")
 
-		hydrateChan <- comicUrl
+		go createBook(comicUrl)
 		fmt.Println("Sent that sucka")
 	}
 }
