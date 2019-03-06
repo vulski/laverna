@@ -12,7 +12,7 @@ type FullComicProScraper struct {
 }
 
 func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
-	book := comic.Book{Url: Url, Title: "im-lazy"}
+	book := comic.Book{Url: Url, Title: "-lazy"}
 
 	u, err := url.Parse(Url)
 
@@ -22,10 +22,12 @@ func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
 
 	doc := scraper.FetchDocument(Url)
 
+	// Get Chapters
 	doc.Find(".scroll-eps > a").Each(func(i int, selection *goquery.Selection) {
 		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
-		doc = scraper.FetchDocument(chp.Url + "?readType=1")
 
+		// Get Pages for each chapter
+		doc = scraper.FetchDocument(chp.Url + "?readType=1")
 		doc.Find("[id=imgPages] > img").Each(func(i int, selection *goquery.Selection) {
 			pageUrl, exists := selection.Attr("src")
 			pageIndx := i + 1
