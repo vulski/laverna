@@ -9,10 +9,11 @@ import (
 )
 
 type Chapter struct {
-	Book   *Book
-	Number int
+	Title  string
 	Url    string
+	Number int
 	Pages  []*Page
+	Book   *Book
 }
 
 func (c *Chapter) GetPage(number int) (*Page, error) {

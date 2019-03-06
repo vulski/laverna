@@ -11,9 +11,9 @@ import (
 )
 
 type Page struct {
-	Chapter *Chapter
-	Number  int
 	Url     string
+	Number  int
+	Chapter *Chapter
 }
 
 func (p *Page) Download(dir string) error {

@@ -9,8 +9,8 @@ import (
 
 type Book struct {
 	Title    string
-	Author   string
 	Url      string
+	Author   string
 	Chapters []*Chapter
 }
 
