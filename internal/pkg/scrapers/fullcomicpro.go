@@ -30,6 +30,7 @@ func (d FullComicProScraper) GetBook(Url string) (*comic.Book, error) {
 	doc.Find(".title > a").Each(func(i int, selection *goquery.Selection) {
 		book.Title = selection.Text()
 	})
+
 	if book.Title == "" {
 		log.Println("Couldn't find book.")
 		return nil, errors.New("Couldn't find book")

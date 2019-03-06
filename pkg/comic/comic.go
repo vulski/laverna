@@ -1,7 +1,9 @@
 package comic
 
 import (
+	"errors"
 	"io/ioutil"
+	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -29,7 +31,18 @@ type Page struct {
 	Url     string
 }
 
+func (book *Book) GetChapter(number int) (*Chapter, error) {
+	for _, chp := range book.Chapters {
+		if chp.Number == number {
+			return &chp, nil
+		}
+	}
+
+	return nil, errors.New("Chapter not found.")
+}
+
 func (book *Book) Download(dir string) error {
+	log.Println("Downloading " + book.Title)
 	dir = filepath.Join(dir, book.Title)
 	err := os.MkdirAll(dir, 0777)
 	if err != nil {
@@ -42,7 +55,18 @@ func (book *Book) Download(dir string) error {
 		}
 	}
 
+	log.Println("Finished downloading " + book.Title)
 	return nil
+}
+
+func (c *Chapter) GetPage(number int) (*Page, error) {
+	for _, page := range c.Pages {
+		if page.Number == number {
+			return &page, nil
+		}
+	}
+
+	return nil, errors.New("Page not found.")
 }
 
 func (c *Chapter) Download(dir string) error {
