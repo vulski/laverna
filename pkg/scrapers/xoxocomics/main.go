@@ -11,14 +11,18 @@ import (
 	"github.com/vulski/laverna/pkg/comic"
 )
 
-type Scraper struct {
+func New() comic.Scraper {
+	return scraper{}
 }
 
-func (d Scraper) Domain() string {
+type scraper struct {
+}
+
+func (d scraper) Domain() string {
 	return "xoxocomics.com"
 }
 
-func (d Scraper) GetBook(Url string) (*comic.Book, error) {
+func (d scraper) GetBook(Url string) (*comic.Book, error) {
 	_, err := url.Parse(Url)
 	if err != nil {
 		return nil, err

@@ -14,8 +14,8 @@ import (
 
 func init() {
 	// Register your scraper
-	comic.RegisterScraper(fullcomicpro.Scraper{})
-	comic.RegisterScraper(xoxocomics.Scraper{})
+	comic.RegisterScraper(fullcomicpro.New())
+	comic.RegisterScraper(xoxocomics.New())
 }
 
 func downloadBook(url string) {
