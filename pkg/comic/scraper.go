@@ -14,6 +14,8 @@ type Scraper interface {
 
 	// Get the book with the given URL.
 	GetBook(string) (*Book, error)
+
+	imageUrl(*Page) (string, error)
 }
 
 var Scrapers = []Scraper{}
@@ -39,6 +41,7 @@ func CreateScraper(URL string) (Scraper, error) {
 	return nil, errors.New("Couldn't find a scraper for that url.")
 }
 
+// Some helper method ...
 func FetchDocument(url string) (*goquery.Document, error) {
 	r, err := http.Get(url)
 

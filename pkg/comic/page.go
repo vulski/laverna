@@ -11,14 +11,20 @@ import (
 )
 
 type Page struct {
-	Url     string
+	// The site's default reading page url.
+	Url string
+	// Page number.
 	Number  int
 	Chapter *Chapter
+	// The actual URL to the image.
+	ImageUrl string
 }
 
 func (p *Page) Download(dir string) error {
 	log.Println("Downloading page: " + strconv.Itoa(p.Number))
-	r, err := http.Get(p.Url)
+	err := p.Chapter.Book.scraper.imageUrl(p)
+
+	r, err := http.Get(p.ImageUrl)
 
 	if err != nil {
 		return err
