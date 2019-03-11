@@ -15,7 +15,8 @@ type Scraper interface {
 	// Get the book with the given URL.
 	GetBook(string) (*Book, error)
 
-	imageUrl(*Page) (string, error)
+	// Find and set the ImageUrl with the Page.Url .
+	FindImageUrl(*Page) error
 }
 
 var Scrapers = []Scraper{}

@@ -20,9 +20,17 @@ type Page struct {
 	ImageUrl string
 }
 
+func (p *Page) Scraper() Scraper {
+	return p.Chapter.Book.Scraper
+}
+
 func (p *Page) Download(dir string) error {
 	log.Println("Downloading page: " + strconv.Itoa(p.Number))
-	err := p.Chapter.Book.scraper.imageUrl(p)
+
+	err := p.Scraper().FindImageUrl(p)
+	if err != nil {
+		return err
+	}
 
 	r, err := http.Get(p.ImageUrl)
 

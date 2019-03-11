@@ -12,7 +12,7 @@ type Book struct {
 	Url      string
 	Author   string
 	Chapters []*Chapter
-	scraper  Scraper
+	Scraper  Scraper
 }
 
 func (book *Book) GetChapter(number int) (*Chapter, error) {

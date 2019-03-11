@@ -21,6 +21,10 @@ func (d scraper) Domain() string {
 	return "fullcomic.pro"
 }
 
+func (d scraper) FindImageUrl(p *comic.Page) error {
+
+}
+
 func (d scraper) GetBook(Url string) (*comic.Book, error) {
 	u, err := url.Parse(Url)
 	if err != nil {
