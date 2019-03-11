@@ -1,4 +1,4 @@
-package scraper
+package comic
 
 import (
 	"errors"
@@ -6,8 +6,6 @@ import (
 	"net/url"
 
 	"github.com/PuerkitoBio/goquery"
-
-	"github.com/vulski/laverna/pkg/comic"
 )
 
 type Scraper interface {
@@ -15,7 +13,7 @@ type Scraper interface {
 	Domain() string
 
 	// Get the book with the given URL.
-	GetBook(string) (*comic.Book, error)
+	GetBook(string) (*Book, error)
 }
 
 var Scrapers = []Scraper{}

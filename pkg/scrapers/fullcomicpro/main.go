@@ -8,7 +8,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/vulski/laverna/pkg/comic"
-	"github.com/vulski/laverna/pkg/scraper"
 )
 
 type Scraper struct {
@@ -26,7 +25,7 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 
 	book := comic.Book{Url: Url}
 
-	doc, err := scraper.FetchDocument(Url)
+	doc, err := comic.FetchDocument(Url)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +55,7 @@ func (d Scraper) GetBook(Url string) (*comic.Book, error) {
 		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
 
 		// Get Pages for each chapter
-		doc, err = scraper.FetchDocument(chp.Url + "?readType=1")
+		doc, err = comic.FetchDocument(chp.Url + "?readType=1")
 		if err != nil {
 			outsideErr = err
 			return false

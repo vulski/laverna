@@ -7,19 +7,19 @@ import (
 	"os"
 	"strings"
 
-	"github.com/vulski/laverna/pkg/scraper"
+	"github.com/vulski/laverna/pkg/comic"
 	"github.com/vulski/laverna/pkg/scrapers/fullcomicpro"
 	"github.com/vulski/laverna/pkg/scrapers/xoxocomics"
 )
 
 func init() {
 	// Register your scraper
-	scraper.RegisterScraper(fullcomicpro.Scraper{})
-	scraper.RegisterScraper(xoxocomics.Scraper{})
+	comic.RegisterScraper(fullcomicpro.Scraper{})
+	comic.RegisterScraper(xoxocomics.Scraper{})
 }
 
 func downloadBook(url string) {
-	scrp, err := scraper.CreateScraper(url)
+	scrp, err := comic.CreateScraper(url)
 	if err != nil {
 		fmt.Println(err)
 		return
