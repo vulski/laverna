@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 type Book struct {
@@ -25,29 +26,9 @@ func (book *Book) GetChapter(number int) (*Chapter, error) {
 	return nil, errors.New("Chapter not found.")
 }
 
-func download(book *Book, dir string, chps chan *Chapter, errs chan error, quit chan int) error {
-	for {
-		select {
-		case chp := <-chps:
-			go func() {
-				err := chp.Download(dir)
-				if err != nil {
-					errs <- err
-				}
-			}()
-		case err := <-errs:
-			return err
-		case <-quit:
-			log.Println("Finished downloading " + book.Title)
-			return nil
-		}
-	}
-}
-
 func (book *Book) Download(dir string) error {
 	errs := make(chan error)
-	chps := make(chan *Chapter, len(book.Chapters))
-	quit := make(chan int)
+	var wg sync.WaitGroup
 
 	log.Println("Downloading " + book.Title)
 	dir = filepath.Join(dir, book.Title)
@@ -56,12 +37,23 @@ func (book *Book) Download(dir string) error {
 		return err
 	}
 
-	go func() {
-		for _, chp := range book.Chapters {
-			chps <- chp
-		}
-		quit <- 0
-	}()
+	for _, chp := range book.Chapters {
+		wg.Add(1)
+		go func() {
+			err := chp.Download(dir)
+			if err != nil {
+				errs <- err
+			}
+			wg.Done()
+		}()
+	}
 
-	return download(book, dir, chps, errs, quit)
+	wg.Wait()
+
+	if err = <-errs; err != nil {
+		log.Println(err)
+	}
+
+	log.Println("Finished downloading " + book.Title)
+	return nil
 }
