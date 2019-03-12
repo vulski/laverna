@@ -15,7 +15,11 @@ type Scraper interface {
 	// Get the book with the given URL.
 	GetBook(string) (*Book, error)
 
-	// Find and set the ImageUrl with the Page.Url .
+	// Find and set the ImageUrl with the Page.Url
+	// This was added because of the tediuous and expensive process of having
+	// to GET the Page's Url, then find the ImageUrl, when hydrating books.
+	// If you set the Page.ImageUrl when hydrating a book, for example, when a "view all pages on one page"
+	// is available, you can just return nil for this.
 	FindImageUrl(*Page) error
 }
 

@@ -13,9 +13,12 @@ import (
 type Page struct {
 	// The site's default reading page url.
 	Url string
+
 	// Page number.
-	Number  int
+	Number int
+
 	Chapter *Chapter
+
 	// The actual URL to the image.
 	ImageUrl string
 }

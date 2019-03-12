@@ -21,10 +21,12 @@ func (d scraper) Domain() string {
 	return "fullcomic.pro"
 }
 
+// We already populate the ImageUrl, so just return nil.
 func (d scraper) FindImageUrl(p *comic.Page) error {
-
+	return nil
 }
 
+// Find the comic book for fullcomic.pro with the given URL and "hydrate" a struct to return.
 func (d scraper) GetBook(Url string) (*comic.Book, error) {
 	u, err := url.Parse(Url)
 	if err != nil {
@@ -62,7 +64,7 @@ func (d scraper) GetBook(Url string) (*comic.Book, error) {
 	chps.EachWithBreak(func(i int, selection *goquery.Selection) bool {
 		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
 
-		// Get Pages for each chapter
+		// Get Pages for each chapter, with the ImageUrl
 		doc, err = comic.FetchDocument(chp.Url + "?readType=1")
 		if err != nil {
 			outsideErr = err
@@ -73,7 +75,7 @@ func (d scraper) GetBook(Url string) (*comic.Book, error) {
 			pageUrl, exists := selection.Attr("src")
 			pageIndx := i + 1
 			if exists {
-				chp.Pages = append(chp.Pages, &comic.Page{Url: pageUrl, Number: pageIndx, Chapter: &chp})
+				chp.Pages = append(chp.Pages, &comic.Page{Url: pageUrl, ImageUrl: pageUrl, Number: pageIndx, Chapter: &chp})
 			}
 		})
 
