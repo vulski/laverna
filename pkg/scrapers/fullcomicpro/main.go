@@ -62,8 +62,8 @@ func (d scraper) GetBook(Url string) (*comic.Book, error) {
 	}
 	chps.Nodes = nodes
 	chps.EachWithBreak(func(i int, selection *goquery.Selection) bool {
-
-		if chpUrl, ok := selection.Attr("href"); !ok {
+		chpUrl, ok := selection.Attr("href")
+		if !ok {
 			return true
 		}
 		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + chpUrl, Number: i + 1, Book: &book}

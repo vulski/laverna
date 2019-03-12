@@ -25,17 +25,17 @@ func (book *Book) GetChapter(number int) (*Chapter, error) {
 	return nil, errors.New("Chapter not found.")
 }
 
-func download(chps chan *Chapter, errs chan error, quit chan int) error {
+func download(book *Book, dir string, chps chan *Chapter, errs chan error, quit chan int) error {
 	for {
 		select {
-		case chp <- chps:
+		case chp := <-chps:
 			go func() {
 				err := chp.Download(dir)
 				if err != nil {
 					errs <- err
 				}
 			}()
-		case err <- errs:
+		case err := <-errs:
 			return err
 		case <-quit:
 			log.Println("Finished downloading " + book.Title)
@@ -63,5 +63,5 @@ func (book *Book) Download(dir string) error {
 		quit <- 0
 	}()
 
-	return download(chps, errs, quit)
+	return download(book, dir, chps, errs, quit)
 }
