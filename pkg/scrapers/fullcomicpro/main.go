@@ -33,7 +33,7 @@ func (d scraper) GetBook(Url string) (*comic.Book, error) {
 		return nil, err
 	}
 
-	book := comic.Book{Url: Url}
+	book := comic.Book{Url: Url, Scraper: d}
 
 	doc, err := comic.FetchDocument(Url)
 	if err != nil {
@@ -62,7 +62,11 @@ func (d scraper) GetBook(Url string) (*comic.Book, error) {
 	}
 	chps.Nodes = nodes
 	chps.EachWithBreak(func(i int, selection *goquery.Selection) bool {
-		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + selection.AttrOr("href", "http://example.com"), Number: i + 1, Book: &book}
+
+		if chpUrl, ok := selection.Attr("href"); !ok {
+			return true
+		}
+		chp := comic.Chapter{Url: u.Scheme + "://" + u.Hostname() + chpUrl, Number: i + 1, Book: &book}
 
 		// Get Pages for each chapter, with the ImageUrl
 		doc, err = comic.FetchDocument(chp.Url + "?readType=1")

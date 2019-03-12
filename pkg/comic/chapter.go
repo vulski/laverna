@@ -28,7 +28,13 @@ func (c *Chapter) GetPage(number int) (*Page, error) {
 
 func (c *Chapter) Download(dir string) error {
 	log.Println("Downloading Chapter: " + strconv.Itoa(c.Number))
-	dir = filepath.Join(dir, strconv.Itoa(c.Number))
+	var title string
+	if c.Title == "" {
+		title = strconv.Itoa(c.Number)
+	} else {
+		title = c.Title
+	}
+	dir = filepath.Join(dir, title)
 	err := os.MkdirAll(dir, 0777)
 	if err != nil {
 		return err

@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/vulski/laverna/internal/cli"
 	"github.com/vulski/laverna/pkg/comic"
 	"github.com/vulski/laverna/pkg/scrapers/fullcomicpro"
 	"github.com/vulski/laverna/pkg/scrapers/xoxocomics"
@@ -16,36 +17,26 @@ func init() {
 	// Register your scraper
 	comic.RegisterScraper(fullcomicpro.New())
 	comic.RegisterScraper(xoxocomics.New())
+	initLogger()
 }
 
-func downloadBook(url string) {
-	scrp, err := comic.CreateScraper(url)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	book, err := scrp.GetBook(url)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println("Finished hydrating book, downloading: " + book.Title)
-	book.Download("comics")
-	fmt.Println("Finished downloading: " + book.Title)
-}
-
-func main() {
+func initLogger() {
 	f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
-	defer f.Close()
+	// defer f.Close()
 	log.SetOutput(f)
+}
 
+func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-
+	fmt.Print("Which directory to you want to download to: [./comics]")
+	scanner.Scan()
+	dir := scanner.Text()
+	if dir == "" {
+		dir = "comics"
+	}
 	for {
 		fmt.Print("Enter Comic Url: ")
 		comicUrl := ""
@@ -58,7 +49,6 @@ func main() {
 
 		comicUrl = strings.Trim(comicUrl, " ")
 
-		go downloadBook(comicUrl)
-		fmt.Println("Sent that sucka")
+		go cli.DownloadBook(comicUrl, dir)
 	}
 }

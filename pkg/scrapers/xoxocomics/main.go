@@ -22,7 +22,13 @@ func (d scraper) Domain() string {
 	return "xoxocomics.com"
 }
 
+// We already populate the ImageUrl, so just return nil.
+func (d scraper) FindImageUrl(p *comic.Page) error {
+	return nil
+}
+
 func (d scraper) GetBook(Url string) (*comic.Book, error) {
+	return nil, errors.New("This scraper is not completed. Sorry nerd")
 	_, err := url.Parse(Url)
 	if err != nil {
 		return nil, err
