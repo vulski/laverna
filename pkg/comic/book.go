@@ -48,9 +48,7 @@ func (book *Book) Download(dir string) error {
 			wg.Done()
 		}()
 	}
-
 	wg.Wait()
-
 	if err = <-errs; err != nil {
 		log.Println(err)
 	}
