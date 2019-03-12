@@ -43,6 +43,7 @@ func (book *Book) Download(dir string) error {
 			err := chp.Download(dir)
 			if err != nil {
 				errs <- err
+				log.Println("Had trouble downloading chapter #" + chp.Number)
 			}
 			wg.Done()
 		}()
