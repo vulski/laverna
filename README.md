@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://i.imgur.com/Hk09ovC.png" width="250" title="hover text">
+</p>
+
 # Laverna
 Heavily refactored fork from https://gitlab.com/PaperStreetHouse/laverna
 
@@ -15,7 +19,7 @@ go get github.com/doctorbarber/laverna/...
 ## Usage
 When prompted (Note: it's going to download everything into your current directory + 'comics' folder)
 ```
-$ larverna-cli
+$ larverna
 // Example
 Enter Comic Url:  http://fullcomic.pro/comic-the-walking-dead
 ```
