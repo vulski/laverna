@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/vulski/laverna/pkg/comic"
+	"github.com/doctorbarber/laverna/pkg/comic"
 )
 
 func DownloadBook(url string, dir string) {

@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/vulski/laverna/internal/cli"
-	"github.com/vulski/laverna/pkg/comic"
-	"github.com/vulski/laverna/pkg/scrapers/fullcomicpro"
-	"github.com/vulski/laverna/pkg/scrapers/xoxocomics"
+	"github.com/doctorbarber/laverna/internal/cli"
+	"github.com/doctorbarber/laverna/pkg/comic"
+	"github.com/doctorbarber/laverna/pkg/scrapers/fullcomicpro"
+	"github.com/doctorbarber/laverna/pkg/scrapers/xoxocomics"
 )
 
 func init() {

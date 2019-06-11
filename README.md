@@ -9,7 +9,7 @@ Pull Requests encouraged!
 
 
 ```bash
-go install github.com/vulski/laverna/cmd/laverna-cli
+go get github.com/doctorbarber/laverna/...
 ```
 
 ## Usage

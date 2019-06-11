@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/vulski/laverna/pkg/comic"
+	"github.com/doctorbarber/laverna/pkg/comic"
 )
 
 func New() comic.Scraper {
